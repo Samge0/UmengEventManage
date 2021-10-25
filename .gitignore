@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+/.idea
+/.vscode
+/.vagrant
+*.pyc
+/dist
+/build
+/test
+/tests
+/logs/
+db.sqlite3
+install.sh
+*.pyc
+.venv
+
+/temp_files/*.txt
+settings.local.py
