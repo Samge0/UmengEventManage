@@ -16,3 +16,10 @@
 - 7、根据源中相同的key名进行批量恢复显示；
 - 8、修改计算事件类型为calculation（此步骤非必须）：multiattribute -》 calculation；
 - 9、完成。
+
+### 三、使用
+
+```
+pip install -r requirements.txt
+python main.py
+```
