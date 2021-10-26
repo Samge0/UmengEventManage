@@ -11,6 +11,11 @@ __pycache__/
 /build
 /test
 /tests
+/server/.idea/
+/logs/
+/server/.idea
+/server/logs/
+server/logs/
 /logs/
 db.sqlite3
 install.sh
