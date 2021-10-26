@@ -1,20 +1,19 @@
 <template>
   <el-container>
     <HomeLeftAside/>
-    <HomeRightMain/>
+    <router-view />
   </el-container>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import HomeLeftAside from './HomeLeftAside.vue';
-import HomeRightMain from './HomeRightMain.vue';
 
 @Options({
   components: {
     HomeLeftAside,
-    HomeRightMain,
   },
+  name: "Home"
 })
 export default class App extends Vue {}
 </script>

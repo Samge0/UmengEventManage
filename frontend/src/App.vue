@@ -10,6 +10,7 @@ import HomeView from './components/views/home/Home.vue';
   components: {
     HomeView,
   },
+  name: "App"
 })
 export default class App extends Vue {}
 </script>
