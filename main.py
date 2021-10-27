@@ -24,3 +24,4 @@ if __name__ == '__main__':
     um_util.cache_event_list(um_keys=[settings.UM_KEY_MASTER] + list(settings.UM_KEY_SLAVES))
     for um_key in settings.UM_KEY_SLAVES:
         um_util.update_um_data(um_key=um_key, um_key_source=settings.UM_KEY_MASTER)
+
