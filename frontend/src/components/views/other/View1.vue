@@ -1,10 +1,13 @@
 <template>
-<a style="margin: 300px;">占位页面111111111111111111111111111111111111</a>
+<a style="margin: 300px;">占位页面: {{prototype}}}</a>
 </template>
 
 <script>
+import {Vue} from "vue-class-component";
+
 export default {
-  name: "View1"
+  name: "View1",
+  prototype: Vue.prototype
 }
 </script>
 

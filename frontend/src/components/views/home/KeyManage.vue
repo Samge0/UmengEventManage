@@ -20,8 +20,8 @@
       <el-divider ></el-divider>
 
       <el-table :data="tableData" v-show="tableData.length > 0">
-        <el-table-column prop="um_name" label="显示名称" width="180" />
-        <el-table-column prop="um_key" label="友盟key" width="250" />
+        <el-table-column prop="um_name" label="显示名称" width="300" />
+        <el-table-column prop="um_key" label="友盟key" width="500" />
         <el-table-column prop="um_master" label="是否Master" >
           <template #default="scope">
             <el-switch v-model="scope.row.um_master"  active-color="#13ce66" @click="setMaster(scope.$index, scope.row)"/>
@@ -59,7 +59,9 @@
                       maxlength="24"
                       show-word-limit="true"
                       placeholder="请输入24位长度的友盟key"
-                      clearable="true">
+                      clearable="true"
+                      disabled="{{dialogCommitTitle == '更新'}}"
+            >
             </el-input>
           </el-form-item>
 
