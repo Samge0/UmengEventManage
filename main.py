@@ -8,15 +8,15 @@ import um_util
 
 def check_env():
     if not settings.X_XSRF_TOKEN:
-        raise "请先在settings.py中配置 X_XSRF_TOKEN"
+        raise ValueError("请先在settings.py中配置 X_XSRF_TOKEN")
     if not settings.X_XSRF_TOKEN_HAITANG:
-        raise "请先在settings.py中配置 X_XSRF_TOKEN_HAITANG"
+        raise ValueError("请先在settings.py中配置 X_XSRF_TOKEN_HAITANG")
     if not settings.COOKIE:
-        raise "请先在settings.py中配置 COOKIE"
+        raise ValueError("请先在settings.py中配置 COOKIE")
     if not settings.UM_KEY_MASTER:
-        raise "请先在settings.py中配置 UM_KEY_MASTER"
+        raise ValueError("请先在settings.py中配置 UM_KEY_MASTER")
     if not settings.UM_KEY_SLAVES:
-        raise "请先在settings.py中配置 UM_KEY_SLAVES"
+        raise ValueError("请先在settings.py中配置 UM_KEY_SLAVES")
 
 
 if __name__ == '__main__':
