@@ -15,6 +15,8 @@ API_EVENT_RESTORE = '{BASE_URL}/restore?relatedId={um_key}&dataSourceId={um_key}
 API_EVENT_PAUSE = '{BASE_URL}/pause?relatedId={um_key}&dataSourceId={um_key}'
 # 自定义事件【编辑】的api
 API_EVENT_EDIT = '{BASE_URL}/edit?relatedId={um_key}&dataSourceId={um_key}'
+# 自定义事件【添加】的api
+API_EVENT_ADD = '{BASE_URL}/add?relatedId={um_key}&dataSourceId={um_key}'
 # 自定义事件【批量复制】的api
 API_EVENT_COPY = '{BASE_URL}/copy?relatedId={um_key}&dataSourceId={um_key}'
 # 自定义事件【批量导入文件】的api

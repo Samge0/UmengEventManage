@@ -173,6 +173,97 @@ def edit_event(um_key: str, event_id: str, display_name: str):
             return False
 
 
+def add_event(um_key: str, key_name: str, display_name: str):
+    """
+    添加 自定义事件
+    :param um_key: 友盟key，每隔应用单独的key
+    :param key_name: 自定义事件的名
+    :param display_name: 自定义事件显示的名称
+    :return:
+    """
+    if not key_name:
+        raise ValueError("自定义事件的key名不能为空")
+    url: str = urls.API_EVENT_ADD.format(BASE_URL=urls.BASE_URL, um_key=um_key)
+    data: dict = {
+        "appkey": um_key,
+        "displayName": display_name or f'暂无描述_{um_key}',
+        "name": key_name,
+        "eventType": "calculation",
+        "relatedId": um_key,
+        "dataSourceId": um_key
+    }
+    r = requests.post(url=url, headers=get_default_headers(), data=get_post_json(data))
+    if is_response_ok(r):
+        print(f'添加自定义事件 成功：{display_name} {key_name} {um_key} \n{r.text[:200]}')
+        return True
+    else:
+        if '事件名称已存在' in eval(r.text).get("msg"):
+            return add_event(um_key=um_key, key_name=key_name, display_name=f'{display_name}_{random.randint(0, 1000)}')
+        else:
+            print(f'添加自定义事件 失败：{display_name} {key_name} {get_fail_msg(um_key=um_key, r=r)}')
+            return False
+
+
+def add_or_update_event_by_file(um_key: str, file_path: str=None):
+    """
+    添加自定义事件
+        如果自定义事件已存在，则自动更新自定义事件显示名
+
+        文件内容格式（一个自定义事件一行）：友盟key名,描述名字,1
+        例如：
+
+        ID_Click_Home_XX,首页_点击XX,1
+        ID_Click_Home_YY,首页_点击YY,1
+
+    :param um_key:
+    :param file_path: 新增的友盟key文件路径，如果不传，则默认读取：temp_files/um_keys_new_add.txt
+    :return:
+    """
+
+    # 获取当前已存在的友盟id，用于判断更新
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt'))
+    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt'))
+    lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
+    curr_keys = ["%s" % item.get('name') for item in lst]
+
+    # 获取要新增的友盟事件信息, 用于跟上面列表对比，进行插入或更新
+    if not file_path:
+        file_path = f'temp_files/um_keys_new_add.txt'
+    event_list = file_util.read_txt_file(file_path).split('\n')
+
+    for new_event_line in event_list or []:
+        if not new_event_line or ',' not in new_event_line:
+            continue
+
+        new_event_split_list = new_event_line.split(',')
+        if not new_event_split_list or len(new_event_split_list) < 3:
+            continue
+
+        key_name = new_event_split_list[0].replace(" ", "")
+        display_name = new_event_split_list[1].replace(" ", "")
+
+        if key_name in curr_keys:
+            print("id已存在，更新显示名")
+            for item in lst:
+                if key_name == item.get('name'):
+                    print(f'id已存在【{key_name}】，更新显示名：{ item.get("displayName")} 变更为==> {display_name}')
+                    edit_event(
+                        um_key=um_key,
+                        event_id=item.get('eventId'),
+                        display_name=display_name
+                    )
+                    time.sleep(1)
+                    break
+        else:
+            print(f"id不存在，进行插入：{key_name} {display_name}")
+            add_event(
+                um_key=um_key,
+                key_name=key_name,
+                display_name=display_name
+            )
+            time.sleep(1)
+
+
 def is_response_ok(r):
     """
     请求是否成功
@@ -362,7 +453,7 @@ def upload_event(um_key: str, file_path: str):
     :return:
     """
     if not file_path or not os.path.exists(file_path):
-        raise "要导入的文件不存在"
+        raise ValueError("要导入的文件不存在")
         return
     url: str = urls.API_EVENT_UPLOAD.format(BASE_URL=urls.BASE_URL, um_key=um_key)
     files = [('file', ('um_keys.txt', open(file_path, 'rb'), 'text/plain'))]
@@ -418,3 +509,16 @@ def cache_event_list(um_keys):
     for um_key in um_keys or []:
         query_event_list(um_key=um_key)
         query_event_pause_list(um_key=um_key)
+
+
+def check_env():
+    if not settings.X_XSRF_TOKEN:
+        raise ValueError("请先在settings.py中配置 X_XSRF_TOKEN")
+    if not settings.X_XSRF_TOKEN_HAITANG:
+        raise ValueError("请先在settings.py中配置 X_XSRF_TOKEN_HAITANG")
+    if not settings.COOKIE:
+        raise ValueError("请先在settings.py中配置 COOKIE")
+    if not settings.UM_KEY_MASTER:
+        raise ValueError("请先在settings.py中配置 UM_KEY_MASTER")
+    if not settings.UM_KEY_SLAVES:
+        raise ValueError("请先在settings.py中配置 UM_KEY_SLAVES")
