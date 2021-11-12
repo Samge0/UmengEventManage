@@ -11,17 +11,17 @@
           </el-col>
 
           <el-col span="6">
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'">添加Key</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogCommitTitle = '保存'; dialogFormVisible = true;">添加Key</el-button>
           </el-col>
 
         </el-row>
       </el-header>
-
       <el-divider ></el-divider>
 
       <el-table :data="tableData" v-show="tableData.length > 0">
-        <el-table-column prop="kv_key" label="显示名称" width="300" />
-        <el-table-column prop="kv_value" label="值" width="500" />
+        <el-table-column prop="kv_name" label="显示名称" width="200" />
+        <el-table-column prop="kv_key" label="key" width="300" />
+        <el-table-column prop="kv_value" label="值" width="400"/>
         <el-table-column prop="kv_status" label="是否有效" >
           <template #default="scope">
             <el-switch v-model="scope.row.kv_status"  active-color="#13ce66" @click="setKvStatus(scope.$index, scope.row)"/>
@@ -38,18 +38,25 @@
       </el-table>
 
      <el-empty description="暂无相关数据" v-show="tableData.length == 0" style="margin-top: 100px">
-       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'">添加Key</el-button>
+       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click=" dialogCommitTitle = '保存'; dialogFormVisible = true;">添加Key</el-button>
      </el-empty>
 
       <!--弹窗-->
       <el-dialog v-model="dialogFormVisible" title="添加Key">
         <el-form :model="form">
+          <el-form-item label="显示名称：" :label-width="formLabelWidth" required="true">
+            <el-input v-model="form.kv_name" autocomplete="off"
+                      placeholder="显示名的描述名"
+                      maxlength="24"
+                      show-word-limit="true"
+            ></el-input>
+          </el-form-item>
           <el-form-item label="key：" :label-width="formLabelWidth" required="true">
             <el-input v-model="form.kv_key" autocomplete="off"
                       placeholder="key"
                       maxlength="24"
                       show-word-limit="true"
-                      disabled="{{dialogCommitTitle == '更新'}}"
+                      :disabled="dialogCommitTitle==`更新`"
             ></el-input>
           </el-form-item>
 
@@ -57,7 +64,7 @@
             <el-input v-model="form.kv_value"
                       autocomplete="off"
                       minlength="0"
-                      maxlength="100"
+                      maxlength="5000"
                       show-word-limit="true"
                       placeholder="请输入key对应的值"
                       clearable="true">
@@ -100,6 +107,7 @@ export default defineComponent({
       tableData: [],
       dialogFormVisible: false,
       form: {
+        kv_name: '',
         kv_key: '',
         kv_value: '',
         kv_status: true,
@@ -170,9 +178,14 @@ export default defineComponent({
     // 编辑主机
     const editKv = (index: any, row: any) => {
       console.log(index, row)
-      state.form = row
-      state.dialogFormVisible = true
+      state.form = {
+        kv_name: row.kv_name,
+        kv_key: row.kv_key,
+        kv_value: row.kv_value,
+        kv_status: row.kv_status
+      }
       state.dialogCommitTitle = "更新"
+      state.dialogFormVisible = true
     }
 
     // 删除主机

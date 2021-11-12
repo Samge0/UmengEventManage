@@ -1,6 +1,6 @@
 import Home from "@/components/views/home/KeyManage.vue";
 import View1 from "@/components/views/other/View1.vue";
-import View2 from "@/components/views/other/View2.vue";
+import View2 from "@/components/views/other/KeyValueManage.vue";
 import {createRouter, createWebHashHistory} from "_vue-router@4.0.12@vue-router";
 
 // 2. 定义路由配置

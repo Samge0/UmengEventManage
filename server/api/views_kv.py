@@ -23,6 +23,7 @@ def get_kvs(request):
 def add_kv(request):
     post_body = json.loads(request.body)
     kv_key = post_body.get('kv_key')
+    kv_name = post_body.get('kv_name') or ""
     kv_value = post_body.get('kv_value')
     kv_status = post_body.get('kv_status') or False
 
@@ -39,11 +40,12 @@ def add_kv(request):
         # 保存/更新入库
         if force_update:
             key = keys[0]
+            key.kv_name = kv_name
             key.kv_value = kv_value
             key.kv_status = kv_status
             msg: str = '更新成功'
         else:
-            key = KeyValue(kv_key=kv_key, kv_value=kv_value, kv_status=kv_status)
+            key = KeyValue(kv_key=kv_key, kv_name=kv_name, kv_value=kv_value, kv_status=kv_status)
             msg: str = '保存成功'
         key.save(force_update=force_update)
 

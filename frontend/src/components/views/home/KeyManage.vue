@@ -60,7 +60,7 @@
                       show-word-limit="true"
                       placeholder="请输入24位长度的友盟key"
                       clearable="true"
-                      disabled="{{dialogCommitTitle == '更新'}}"
+                      :disabled="dialogCommitTitle==`更新`"
             >
             </el-input>
           </el-form-item>
@@ -163,7 +163,11 @@ export default defineComponent({
     // 编辑主机
     const editHost = (index: any, row: any) => {
       console.log(index, row)
-      state.form = row
+      state.form = {
+        um_name: row.um_name,
+        um_key: row.um_key,
+        um_master: row.um_master
+      }
       state.dialogFormVisible = true
       state.dialogCommitTitle = "更新"
     }
