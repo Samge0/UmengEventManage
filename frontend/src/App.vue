@@ -4,7 +4,7 @@
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import HomeView from './components/views/home/Home.vue';
+import HomeView from './views/home/Home.vue';
 
 @Options({
   components: {

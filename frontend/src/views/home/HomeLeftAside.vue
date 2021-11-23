@@ -47,7 +47,7 @@ export default defineComponent({
           "path": "/other/view1",
         },
         {
-          "name": "任务管理",
+          "name": "键值管理",
           "id": "3",
           "icon": "el-icon-setting",
           "path": "/other/view2",

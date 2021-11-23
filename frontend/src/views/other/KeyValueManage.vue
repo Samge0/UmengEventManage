@@ -21,15 +21,15 @@
       <el-table :data="tableData" v-show="tableData.length > 0">
         <el-table-column prop="kv_name" label="显示名称" width="200" />
         <el-table-column prop="kv_key" label="key" width="300" />
-        <el-table-column prop="kv_value" label="值" width="400"/>
-        <el-table-column prop="kv_status" label="是否有效" >
+        <el-table-column prop="kv_value" label="值" show-overflow-tooltip="true" width="700"/>
+        <el-table-column prop="kv_status" label="是否有效" width="100">
           <template #default="scope">
             <el-switch v-model="scope.row.kv_status"  active-color="#13ce66" @click="setKvStatus(scope.$index, scope.row)"/>
           </template>
         </el-table-column>
 
 <!--        操作-->
-       <el-table-column fixed="right" label="操作" min-width="280" align="right">
+       <el-table-column fixed="right" label="操作" min-width="250" align="right">
           <template #default="scope">
             <el-button class="el-button-right" type="primary" size="mini" @click="editKv(scope.$index, scope.row)" icon="el-icon-edit">编辑</el-button>
             <el-button class="el-button-right" type="danger" size="mini" @click="deleteKv(scope.$index, scope.row)" icon="el-icon-close">删除</el-button>
