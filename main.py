@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/10/25 下午1:45
 # @Author  : Samge
-import um_util
+import um_tasks
 
 
 if __name__ == '__main__':
-    um_util.do_um_synchro_task()
-    # um_util.do_add_or_update_task()
+    um_tasks.do_um_synchro_task()
+    # um_tasks.do_add_or_update_task()
 
