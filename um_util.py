@@ -18,6 +18,27 @@ false = False
 null = None
 
 
+def do_um_synchro_task():
+    """
+    开始执行友盟同步任务
+    :return:
+    """
+    check_env()
+    cache_event_list(um_keys=[settings.UM_KEY_MASTER] + list(settings.UM_KEY_SLAVES))
+    for um_key in settings.UM_KEY_SLAVES:
+        update_um_data(um_key=um_key, um_key_source=settings.UM_KEY_MASTER)
+
+
+def do_add_or_update_task():
+    """
+    执行添加/更新友盟自定义事件的任务
+    :return:
+    """
+    check_env()
+    cache_event_list(um_keys=[settings.UM_KEY_MASTER] + list(settings.UM_KEY_SLAVES))
+    add_or_update_event_by_file(settings.UM_KEY_MASTER)
+
+
 def update_um_data(um_key: str, um_key_source: str):
     """
     更新友盟 自定义事件 数据
