@@ -5,8 +5,10 @@
 from django.conf.urls import url
 from .views import *
 from .views_kv import *
+from . import views_sock
 
 
+# http路由
 urlpatterns = [
     url(r'get_um_keys$', get_um_keys),
     url(r'add_um_key$', add_um_key),
@@ -17,4 +19,10 @@ urlpatterns = [
     url(r'add_kv$', add_kv),
     url(r'del_kv$', del_kv),
     url(r'kv_status$', kv_status),
+]
+
+
+# socks路由
+websocket_urlpatterns = [
+    url(r'ws/um', views_sock.UmConsumer.as_asgi()),
 ]

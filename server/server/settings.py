@@ -41,7 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'api',
     'corsheaders',
+    'channels',
 ]
+
+# 指定ASGI的路由地址 channels
+ASGI_APPLICATION = 'server.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
