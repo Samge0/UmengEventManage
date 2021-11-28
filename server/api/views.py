@@ -2,7 +2,7 @@ import json
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from .json_encoder import DateEncoder
-from .models import UmKey
+from .models import UmKey, KeyValue
 
 # json格式
 CONTENT_TYPE_JSON = "application/json,charset=utf-8"
@@ -58,6 +58,7 @@ def add_um_key(request):
             'msg': msg,
             'data': list(UmKey.objects.filter().values())
         }
+        update_um_key_cache(r.get('data'))
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
 
 
@@ -79,6 +80,7 @@ def del_um_key(request):
             'msg': '删除成功',
             'data': list(UmKey.objects.filter().values())
         }
+        update_um_key_cache(r.get('data'))
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
 
 
@@ -101,4 +103,46 @@ def um_key_master(request):
             'msg': '设置成功',
             'data': list(UmKey.objects.filter().values())
         }
+        update_um_key_cache(r.get('data'))
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+
+
+def update_um_key_cache(lst):
+    """
+    读取最新主从的友盟key，存入数据库
+    """
+    UM_KEY_MASTER = ''
+    UM_KEY_SLAVES = []
+    for key in lst or []:
+        um_key: str = key.get('um_key')
+        um_master: bool = key.get('um_master')
+        if not um_key:
+            continue
+        if um_master is True:
+            UM_KEY_MASTER = um_key
+        else:
+            UM_KEY_SLAVES.append(um_key)
+    update_um_key_cache_to_db('UM_KEY_MASTER', UM_KEY_MASTER)
+    update_um_key_cache_to_db('UM_KEY_SLAVES', '|'.join(UM_KEY_SLAVES))
+
+
+def update_um_key_cache_to_db(kv_key, kv_value):
+    """
+    将友盟key存入键值对数据库
+    """
+    keys = KeyValue.objects.filter(kv_key=kv_key)
+    force_update: bool = True if keys and len(keys) > 0 else False
+
+    # 保存/更新入库
+    if force_update:
+        key = keys[0]
+        key.kv_value = kv_value
+        key.kv_name = ''
+        key.kv_status = True
+        # msg: str = '更新成功'
+    else:
+        key = KeyValue(kv_key=kv_key, kv_name='', kv_value=kv_value, kv_status=True)
+        # msg: str = '保存成功'
+    key.save(force_update=force_update)
+
+

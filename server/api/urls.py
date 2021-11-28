@@ -16,7 +16,10 @@ urlpatterns = [
     url(r'um_key_master$', um_key_master),
 
     url(r'get_kvs$', get_kvs),
+    url(r'get_config$', get_config),
+    url(r'save_config$', save_config),
     url(r'add_kv$', add_kv),
+    url(r'add_kvs$', add_kvs),
     url(r'del_kv$', del_kv),
     url(r'kv_status$', kv_status),
 ]

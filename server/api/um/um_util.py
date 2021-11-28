@@ -9,14 +9,19 @@ import re
 import time
 import requests as requests
 
-import file_util
-import settings
-import urls
+from . import urls
+from ..um import file_util
 
 true = True
 false = False
 null = None
+
+# 友盟的socket通讯对象
 um_socks = None
+# 请求头
+default_headers = {}
+# 停止标记
+stop = False
 
 
 def update_um_data(um_key: str, um_key_source: str):
@@ -35,38 +40,38 @@ def update_um_data(um_key: str, um_key_source: str):
     # time.sleep(1)
 
     _print_tip(f'\n1、导出友盟自定义事件【源】：{um_key_source}')
-    export_event(um_key=um_key_source)
+    # export_event(um_key=um_key_source)
     time.sleep(1)
 
     _print_tip(f'\n2、暂停所有自定义事件：{um_key}')
-    event_pause_all(um_key=um_key)
+    # event_pause_all(um_key=um_key)
     time.sleep(1)
 
     _print_tip('\n3、上传/导入友盟自定义事件')
-    upload_event(um_key=um_key, file_path=f'temp_files/um_keys_{um_key_source}.txt')
+    # upload_event(um_key=um_key, file_path=f'temp_files/um_keys_{um_key_source}.txt')
     time.sleep(1)
 
     _print_tip(f'\n4、再次暂停所有自定义事件：{um_key}')
-    event_pause_all(um_key=um_key)
+    # event_pause_all(um_key=um_key)
     time.sleep(1)
 
-    refresh_local_file(um_key=um_key, step_tip=5)
+    # refresh_local_file(um_key=um_key, step_tip=5)
 
     _print_tip(f'\n6、批量恢复自定义事件，根据指定源进行恢复： {um_key_source} 恢复到==》{um_key}')
-    event_restore_by_source(um_key=um_key, um_key_source=um_key_source)
+    # event_restore_by_source(um_key=um_key, um_key_source=um_key_source)
     time.sleep(1)
 
-    refresh_local_file(um_key=um_key, step_tip=7)
+    # refresh_local_file(um_key=um_key, step_tip=7)
 
     _print_tip(f'\n8、更新自定义事件-》计算事件（calculation）：{um_key}')
-    update_event_multiattribute_to_calculation(um_key=um_key)
+    # update_event_multiattribute_to_calculation(um_key=um_key)
     time.sleep(1)
 
     _print_tip(f'\n9、同步更新自定义事件的显示名称：{um_key_source} 同步到==》{um_key}')
-    update_event_display_name(um_key=um_key, um_key_source=um_key_source)
+    # update_event_display_name(um_key=um_key, um_key_source=um_key_source)
     time.sleep(1)
 
-    refresh_local_file(um_key=um_key, step_tip=10)
+    # refresh_local_file(um_key=um_key, step_tip=10)
 
     _print_tip(f'所有操作已完成：{um_key}\n 点击 https://mobile.umeng.com/platform/{um_key}/setting/event/list 查看')
 
@@ -88,15 +93,15 @@ def add_or_update_event_by_file(um_key: str, file_path: str=None):
     """
 
     # 获取当前已存在的友盟id，用于判断更新
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt'))
-    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt'))
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
+    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     curr_keys = ["%s" % item.get('name') for item in lst]
 
     # 获取要新增的友盟事件信息, 用于跟上面列表对比，进行插入或更新
     if not file_path:
         file_path = f'temp_files/um_keys_new_add.txt'
-    event_list = file_util.read_txt_file(file_path).split('\n')
+    event_list = (file_util.read_txt_file(file_path) or '').split('\n')
 
     for new_event_line in event_list or []:
         if not new_event_line or ',' not in new_event_line:
@@ -278,8 +283,8 @@ def event_restore_by_source(um_key: str, um_key_source: str):
     :param um_key_source: 源，只有跟此源中的数据匹配，才给恢复显示
     :return:
     """
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt'))
-    json_dict_source = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key_source}.txt'))
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict_source = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key_source}.txt') or '{}')
     source_key_names = ['%s' % item.get('name') for item in get_event_list(json_dict=json_dict_source)]
     ids = []
     for item in get_event_list(json_dict=json_dict):
@@ -295,7 +300,7 @@ def event_pause(um_key: str, ids: [str]):
 
 def event_pause_all(um_key: str):
     """批量暂停所有自定义事件"""
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt'))
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
     ids = []
     for item in get_event_list(json_dict=json_dict):
         ids.append(item.get('eventId'))
@@ -336,8 +341,8 @@ def update_event_multiattribute_to_calculation(um_key: str):
     :param um_key:
     :return:
     """
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt'))
-    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt'))
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
+    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     succeed_count: int = 0
     fail_count: int = 0
@@ -366,8 +371,8 @@ def update_event_display_name(um_key: str, um_key_source: str):
     :param um_key_source: 源，只有跟此源中的数据匹配 且 显示名称不一样，才给同步更新显示名称
     :return:
     """
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt'))
-    json_dict_source = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key_source}.txt'))
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
+    json_dict_source = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key_source}.txt') or '{}')
     for item in get_event_list(json_dict=json_dict):
         for item_source in get_event_list(json_dict=json_dict_source):
             if item.get('name') == item_source.get('name'):
@@ -389,8 +394,8 @@ def update_display_name_to_key_name(um_key: str, key_word: str):
     """
     if not key_word:
         return
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt'))
-    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt'))
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
+    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     for item in lst:
         key_name: str = item.get('name')
@@ -465,7 +470,7 @@ def export_event(um_key: str, file_path: str = None):
     """
     if not file_path:
         file_path = f'temp_files/um_keys_{um_key}.txt'
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt'))
+    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
     temp_lst = []
     for item in get_event_list(json_dict=json_dict):
         temp_lst.append(f'{item.get("name")},{item.get("displayName")},1')
@@ -506,13 +511,15 @@ def get_default_headers():
     获取默认的请求头
     :return:
     """
-    return {
-        'user-agent': settings.USER_AGENT,
-        'x-xsrf-token': settings.X_XSRF_TOKEN,
-        'x-xsrf-token-haitang': settings.X_XSRF_TOKEN_HAITANG,
-        'content-type': settings.CONTENT_TYPE,
-        'cookie': settings.COOKIE,
-    }
+    return default_headers
+    # config = settings.get_config()
+    # return {
+    #     'user-agent': config.get('USER_AGENT'),
+    #     'x-xsrf-token': config.get('X_XSRF_TOKEN'),
+    #     'x-xsrf-token-haitang': config.get('X_XSRF_HAITANG'),
+    #     'content-type': config.get('CONTENT_TYPE'),
+    #     'cookie': config.get('COOKIE'),
+    # }
 
 
 def get_post_json(data: dict):
@@ -530,6 +537,8 @@ def _print_tip(tip: str):
     :param tip:
     :return:
     """
+    if stop:
+        raise ValueError("强制退出执行")
     print(tip)
     if um_socks:
         um_socks.send(tip)

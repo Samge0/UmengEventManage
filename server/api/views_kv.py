@@ -2,7 +2,7 @@ import json
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from .json_encoder import DateEncoder
-from .models import KeyValue
+from .models import KeyValue, UmKey
 
 # json格式
 CONTENT_TYPE_JSON = "application/json,charset=utf-8"
@@ -17,6 +17,78 @@ def get_kvs(request):
         'data': lst
     }
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+
+
+def get_key_value(config: dict, kv_key: str):
+    keys = KeyValue.objects.filter(kv_key=kv_key)
+    if keys:
+        config[kv_key] = keys[0].kv_value
+
+
+@require_http_methods(["GET"])
+def get_config(request):
+    config: dict = {}
+    get_key_value(config, "CONTENT_TYPE")
+    get_key_value(config, "USER_AGENT")
+    get_key_value(config, "X_XSRF_TOKEN")
+    get_key_value(config, "X_XSRF_HAITANG")
+    get_key_value(config, "COOKIE")
+    get_key_value(config, "UM_KEY_MASTER")
+    get_key_value(config, "UM_KEY_SLAVES")
+    config['UM_KEY_SLAVES'] = (config.get('UM_KEY_SLAVES') or '').split('|')
+
+    r = {
+        'code': 200,
+        'msg': 'success',
+        'data': config
+    }
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+
+
+@require_http_methods(["POST"])
+def save_config(request):
+    post_body = json.loads(request.body)
+    if not post_body:
+        r = {
+            'code': 200,
+            'msg': '保存失败',
+            'data': None
+        }
+    else:
+
+        for kv_key, kv_value in post_body.items():
+            kv_name = post_body.get('kv_name') or ""
+            kv_status = True
+
+            keys = KeyValue.objects.filter(kv_key=kv_key)
+            force_update: bool = True if keys and len(keys) > 0 else False
+
+            # 保存/更新入库
+            if force_update:
+                key = keys[0]
+                key.kv_name = key.kv_name
+                key.kv_value = kv_value
+                key.kv_status = kv_status
+                msg: str = '更新成功'
+            else:
+                key = KeyValue(kv_key=kv_key, kv_name=kv_name, kv_value=kv_value, kv_status=kv_status)
+                msg: str = '保存成功'
+            key.save(force_update=force_update)
+
+        # 查询列表返回
+        r = {
+            'code': 200,
+            'msg': msg,
+            'data': list(KeyValue.objects.filter().values())
+        }
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+
+
+@require_http_methods(["POST"])
+def add_kvs(request):
+    post_body = json.loads(request.body)
+    for key_dict in post_body.get('keys') or []:
+        add_kv(key_dict)
 
 
 @require_http_methods(["POST"])

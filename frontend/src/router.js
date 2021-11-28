@@ -1,17 +1,16 @@
-import Home from "@/views/home/KeyManage.vue";
-import View1 from "@/views/other/View1.vue";
-import View2 from "@/views/other/KeyValueManage.vue";
-import {createRouter, createWebHashHistory} from "_vue-router@4.0.12@vue-router";
+import HomeView from "@/views/other/KeyValueManage.vue";
+import KeyValueManage from "@/views/other/KeyValueManage.vue";
+import ConfigView from "@/views/other/ConfigView.vue";
+import TaskManage from "@/views/other/TaskManage";
+import {createRouter, createWebHashHistory} from "vue-router";
 
 // 2. 定义路由配置
 const routes = [
-  {
-    path: "/",
-    redirect: '/home'
-  },
-  { path: "/home", component: Home },
-  { path: "/other/view1", component: View1 },
-  { path: "/other/view2", component: View2 },
+  { path: "/", redirect: '/home'},
+  { path: "/home", component: HomeView },
+  { path: "/other/task", component: TaskManage },
+  { path: "/other/kvManage", component: KeyValueManage },
+  { path: "/other/config", component: ConfigView },
 ];
 
 // 3. 创建路由实例

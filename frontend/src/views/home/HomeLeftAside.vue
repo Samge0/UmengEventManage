@@ -40,18 +40,25 @@ export default defineComponent({
           "icon": "el-icon-edit",
           "path": "/home",
         },
-        {
-          "name": "项目管理",
+          {
+          "name": "配置管理",
           "id": "2",
+          "icon": "el-icon-setting",
+          "path": "/other/config",
+        },
+        {
+          "name": "任务管理",
+          "id": "3",
           "icon": "el-icon-menu",
-          "path": "/other/view1",
+          "path": "/other/task",
         },
         {
           "name": "键值管理",
-          "id": "3",
+          "id": "4",
           "icon": "el-icon-setting",
-          "path": "/other/view2",
+          "path": "/other/kvManage",
         },
+
 
       ],
     })
