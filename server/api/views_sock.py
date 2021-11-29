@@ -30,9 +30,13 @@ class UmConsumer(WebsocketConsumer):
 
     def receive(self, text_data):
         print(f"UmConsumer receive 接收数据：{text_data}")
-        text_data_json = json.loads(text_data)
-        type = text_data_json.get('type')
-        config = text_data_json.get('config')
+        type = -1
+        config = None
+
+        if '{' in text_data:
+            text_data_json = json.loads(text_data) or {}
+            type = text_data_json.get('type')
+            config = text_data_json.get('config')
 
         # message = text_data_json['message']
 
@@ -44,8 +48,8 @@ class UmConsumer(WebsocketConsumer):
         #     time.sleep(1)
         #     self.send(f"{i}")
 
-        msg: str = check_env(self, config)
-        if msg:
+        error_msg: str = check_env(self, config)
+        if error_msg:
             self.send(f"任务执行完毕")
             return
 
@@ -95,23 +99,23 @@ def check_env(self, config):
     :return:
     """
     if not config:
-        msg = "配置不能为空"
-        self.send(msg)
-        return msg
-    msg: str = None
+        error_msg = "配置不能为空"
+        self.send(error_msg)
+        return error_msg
+    error_msg: str = None
     if not config.get('X_XSRF_TOKEN'):
-        msg = "请先配置 X_XSRF_TOKEN"
-        self.send(msg)
+        error_msg = "请先配置 X_XSRF_TOKEN"
+        self.send(error_msg)
     if not config.get('X_XSRF_HAITANG'):
-        msg = "请先配置 X_XSRF_HAITANG"
-        self.send(msg)
+        error_msg = "请先配置 X_XSRF_HAITANG"
+        self.send(error_msg)
     if not config.get('COOKIE'):
-        msg = "请先配置 COOKIE"
-        self.send(msg)
+        error_msg = "请先配置 COOKIE"
+        self.send(error_msg)
     if not config.get('UM_KEY_MASTER'):
-        msg = "请先配置 UM_KEY_MASTER"
-        self.send(msg)
+        error_msg = "请先配置 UM_KEY_MASTER"
+        self.send(error_msg)
     if not config.get('UM_KEY_SLAVES'):
-        msg = "请先配置 UM_KEY_SLAVES"
-        self.send(msg)
-    return msg
+        error_msg = "请先配置 UM_KEY_SLAVES"
+        self.send(error_msg)
+    return error_msg
