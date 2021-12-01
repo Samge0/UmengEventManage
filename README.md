@@ -23,3 +23,11 @@
 pip install -r requirements.txt
 python main.py
 ```
+
+### 四、截图
+
+![Image text](screenshots/img1.png)
+
+![Image text](screenshots/img2.png)
+
+![Image text](screenshots/img3.png)
