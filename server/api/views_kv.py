@@ -35,7 +35,6 @@ def get_config(request):
     get_key_value(config, "COOKIE")
     get_key_value(config, "UM_KEY_MASTER")
     get_key_value(config, "UM_KEY_SLAVES")
-    config['UM_KEY_SLAVES'] = (config.get('UM_KEY_SLAVES') or '').split('|')
 
     r = {
         'code': 200,

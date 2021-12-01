@@ -79,7 +79,7 @@ class UmConsumer(WebsocketConsumer):
 def parse_config(config):
     if config:
         um_tasks.UM_KEY_MASTER = config.get('UM_KEY_MASTER') or ''
-        um_tasks.UM_KEY_SLAVES = config.get('UM_KEY_SLAVES') or []
+        um_tasks.UM_KEY_SLAVES = (config.get('UM_KEY_SLAVES') or '').split('|') or []
         um_util.default_headers = get_header(config)
 
 

@@ -40,38 +40,38 @@ def update_um_data(um_key: str, um_key_source: str):
     # time.sleep(1)
 
     _print_tip(f'\n1、导出友盟自定义事件【源】：{um_key_source}')
-    # export_event(um_key=um_key_source)
+    export_event(um_key=um_key_source)
     time.sleep(1)
 
     _print_tip(f'\n2、暂停所有自定义事件：{um_key}')
-    # event_pause_all(um_key=um_key)
+    event_pause_all(um_key=um_key)
     time.sleep(1)
 
     _print_tip('\n3、上传/导入友盟自定义事件')
-    # upload_event(um_key=um_key, file_path=f'temp_files/um_keys_{um_key_source}.txt')
+    upload_event(um_key=um_key, file_path=f'{get_temp_file_dir()}/um_keys_{um_key_source}.txt')
     time.sleep(1)
 
     _print_tip(f'\n4、再次暂停所有自定义事件：{um_key}')
-    # event_pause_all(um_key=um_key)
+    event_pause_all(um_key=um_key)
     time.sleep(1)
 
-    # refresh_local_file(um_key=um_key, step_tip=5)
+    refresh_local_file(um_key=um_key, step_tip=5)
 
     _print_tip(f'\n6、批量恢复自定义事件，根据指定源进行恢复： {um_key_source} 恢复到==》{um_key}')
-    # event_restore_by_source(um_key=um_key, um_key_source=um_key_source)
+    event_restore_by_source(um_key=um_key, um_key_source=um_key_source)
     time.sleep(1)
 
-    # refresh_local_file(um_key=um_key, step_tip=7)
+    refresh_local_file(um_key=um_key, step_tip=7)
 
     _print_tip(f'\n8、更新自定义事件-》计算事件（calculation）：{um_key}')
-    # update_event_multiattribute_to_calculation(um_key=um_key)
+    update_event_multiattribute_to_calculation(um_key=um_key)
     time.sleep(1)
 
     _print_tip(f'\n9、同步更新自定义事件的显示名称：{um_key_source} 同步到==》{um_key}')
-    # update_event_display_name(um_key=um_key, um_key_source=um_key_source)
+    update_event_display_name(um_key=um_key, um_key_source=um_key_source)
     time.sleep(1)
 
-    # refresh_local_file(um_key=um_key, step_tip=10)
+    refresh_local_file(um_key=um_key, step_tip=10)
 
     _print_tip(f'所有操作已完成：{um_key}\n 点击 https://mobile.umeng.com/platform/{um_key}/setting/event/list 查看')
 
@@ -88,19 +88,19 @@ def add_or_update_event_by_file(um_key: str, file_path: str=None):
         ID_Click_Home_YY,首页_点击YY,1
 
     :param um_key:
-    :param file_path: 新增的友盟key文件路径，如果不传，则默认读取：temp_files/um_keys_new_add.txt
+    :param file_path: 新增的友盟key文件路径，如果不传，则默认读取：{get_temp_file_dir()}/um_keys_new_add.txt
     :return:
     """
 
     # 获取当前已存在的友盟id，用于判断更新
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
-    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
+    json_dict_pause = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     curr_keys = ["%s" % item.get('name') for item in lst]
 
     # 获取要新增的友盟事件信息, 用于跟上面列表对比，进行插入或更新
     if not file_path:
-        file_path = f'temp_files/um_keys_new_add.txt'
+        file_path = f'{get_temp_file_dir()}/um_keys_new_add.txt'
     event_list = (file_util.read_txt_file(file_path) or '').split('\n')
 
     for new_event_line in event_list or []:
@@ -168,7 +168,7 @@ def query_event_list(um_key: str):
     r = requests.post(url=url, headers=get_default_headers(), data=get_post_json(data))
     if is_response_ok(r):
         _print_tip(f'获取自定义事件列表（有效的）成功：{um_key} \n{r.text[:200]}...')
-        file_util.save_txt_file(r.text, f'temp_files/event_lst_{um_key}.txt')
+        file_util.save_txt_file(r.text, f'{get_temp_file_dir()}/event_lst_{um_key}.txt')
     else:
         _print_tip(f'获取自定义事件列表（有效的）失败：{get_fail_msg(um_key=um_key, r=r)}')
 
@@ -191,7 +191,7 @@ def query_event_pause_list(um_key: str):
     r = requests.post(url=url, headers=get_default_headers(), data=get_post_json(data))
     if is_response_ok(r):
         _print_tip(f'获取自定义事件列表（暂停的）成功：{um_key} \n{r.text[:200]}')
-        file_util.save_txt_file(r.text, f'temp_files/event_lst_{um_key}_pause.txt')
+        file_util.save_txt_file(r.text, f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt')
     else:
         _print_tip(f'获取自定义事件列表（暂停的）失败：{get_fail_msg(um_key=um_key, r=r)}')
 
@@ -220,8 +220,12 @@ def edit_event(um_key: str, event_id: str, display_name: str):
         _print_tip(f'修改自定义事件 成功：{display_name} {event_id} {um_key} \n{r.text[:200]}')
         return True
     else:
-        if '事件名称已存在' in eval(r.text).get("msg"):
-            return edit_event(um_key=um_key, event_id=event_id, display_name=f'{display_name}_{random.randint(0, 1000)}')
+        if '事件名称已存在' in get_eval_dict(r.text).get("msg"):
+            return edit_event(
+                um_key=um_key,
+                event_id=event_id,
+                display_name=f'{display_name}_{random.randint(0, 1000)}'
+            )
         else:
             _print_tip(f'修改自定义事件 失败：{display_name} {event_id} {get_fail_msg(um_key=um_key, r=r)}')
             return False
@@ -252,7 +256,7 @@ def add_event(um_key: str, key_name: str, display_name: str):
         _print_tip(f'添加自定义事件 成功：{display_name} {key_name} {um_key} \n{r.text[:200]}')
         return True
     else:
-        if '事件名称已存在' in eval(r.text).get("msg"):
+        if '事件名称已存在' in get_eval_dict(r.text).get("msg"):
             return add_event(um_key=um_key, key_name=key_name, display_name=f'{display_name}_{random.randint(0, 1000)}')
         else:
             _print_tip(f'添加自定义事件 失败：{display_name} {key_name} {get_fail_msg(um_key=um_key, r=r)}')
@@ -266,7 +270,7 @@ def is_response_ok(r):
     :return:
     """
     try:
-        return r and r.status_code == 200 and eval(r.text).get('code') == 200
+        return r and r.status_code == 200 and get_eval_dict(r.text).get('code') == 200
     except:
         return False
 
@@ -283,8 +287,8 @@ def event_restore_by_source(um_key: str, um_key_source: str):
     :param um_key_source: 源，只有跟此源中的数据匹配，才给恢复显示
     :return:
     """
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
-    json_dict_source = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key_source}.txt') or '{}')
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict_source = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key_source}.txt') or '{}')
     source_key_names = ['%s' % item.get('name') for item in get_event_list(json_dict=json_dict_source)]
     ids = []
     for item in get_event_list(json_dict=json_dict):
@@ -300,7 +304,7 @@ def event_pause(um_key: str, ids: [str]):
 
 def event_pause_all(um_key: str):
     """批量暂停所有自定义事件"""
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
     ids = []
     for item in get_event_list(json_dict=json_dict):
         ids.append(item.get('eventId'))
@@ -341,8 +345,8 @@ def update_event_multiattribute_to_calculation(um_key: str):
     :param um_key:
     :return:
     """
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
-    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
+    json_dict_pause = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     succeed_count: int = 0
     fail_count: int = 0
@@ -371,8 +375,8 @@ def update_event_display_name(um_key: str, um_key_source: str):
     :param um_key_source: 源，只有跟此源中的数据匹配 且 显示名称不一样，才给同步更新显示名称
     :return:
     """
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
-    json_dict_source = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key_source}.txt') or '{}')
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
+    json_dict_source = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key_source}.txt') or '{}')
     for item in get_event_list(json_dict=json_dict):
         for item_source in get_event_list(json_dict=json_dict_source):
             if item.get('name') == item_source.get('name'):
@@ -394,8 +398,8 @@ def update_display_name_to_key_name(um_key: str, key_word: str):
     """
     if not key_word:
         return
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
-    json_dict_pause = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
+    json_dict_pause = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     for item in lst:
         key_name: str = item.get('name')
@@ -451,9 +455,11 @@ def upload_event(um_key: str, file_path: str):
         raise ValueError("要导入的文件不存在")
         return
     url: str = urls.API_EVENT_UPLOAD.format(BASE_URL=urls.BASE_URL, um_key=um_key)
-    files = [('file', ('um_keys.txt', open(file_path, 'rb'), 'text/plain'))]
-    headers = get_default_headers()
-    headers['Content-Type'] = None
+    files = [('file', (f'um_keys.txt', open(file_path, 'rb'), 'text/plain'))]
+    headers = {}
+    for k, v in get_default_headers().items():
+        if 'content-type' != k:
+            headers[k] = v
     r = requests.post(url=url, data={}, headers=headers, files=files)
     if is_response_ok(r):
         _print_tip(f'批量导入 自定义事件 成功：{file_path} -> {um_key} \n{r.text[:200]}')
@@ -465,12 +471,12 @@ def export_event(um_key: str, file_path: str = None):
     """
     批量导出 自定义事件
     :param um_key:
-    :param file_path: 自定义事件文件的保存路径，默认导出到temp_files文件目录中
+    :param file_path: 自定义事件文件的保存路径，默认导出到{get_temp_file_dir()}文件目录中
     :return:
     """
     if not file_path:
-        file_path = f'temp_files/um_keys_{um_key}.txt'
-    json_dict = eval(file_util.read_txt_file(f'temp_files/event_lst_{um_key}.txt') or '{}')
+        file_path = f'{get_temp_file_dir()}/um_keys_{um_key}.txt'
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
     temp_lst = []
     for item in get_event_list(json_dict=json_dict):
         temp_lst.append(f'{item.get("name")},{item.get("displayName")},1')
@@ -490,7 +496,7 @@ def get_fail_msg(um_key: str, r):
     :return:
     """
     try:
-        return f'{um_key} {eval(r.text).get("msg")}'
+        return f'{um_key} {get_eval_dict(r.text).get("msg")}'
     except:
         return f'{um_key}'
 
@@ -511,6 +517,7 @@ def get_default_headers():
     获取默认的请求头
     :return:
     """
+    print(f'default_headers = {default_headers}')
     return default_headers
     # config = settings.get_config()
     # return {
@@ -529,6 +536,26 @@ def get_post_json(data: dict):
     :return:
     """
     return json.dumps(data, ensure_ascii=False).encode('utf-8')
+
+
+def get_temp_file_dir():
+    """
+    获取临时文件的目录
+    """
+    return f'{os.path.dirname(os.path.realpath(__file__))}/temp_files'
+    # return f'./temp_files'
+
+
+def get_eval_dict(txt: str):
+    """
+    获取字典
+    """
+    try:
+        return eval(txt) or {}
+    except Exception as e:
+        tip: str = f'get_eval_dict {txt[:200]} 转dict对象失败，e={e[:200]}'
+        _print_tip(tip)
+        return {}
 
 
 def _print_tip(tip: str):

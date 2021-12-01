@@ -17,7 +17,7 @@ def do_um_synchro_task():
     开始执行友盟同步任务
     :return:
     """
-    # um_util.cache_event_list(um_keys=[UM_KEY_MASTER] + list(UM_KEY_SLAVES))
+    um_util.cache_event_list(um_keys=[UM_KEY_MASTER] + list(UM_KEY_SLAVES))
     for um_key in UM_KEY_SLAVES:
         um_util.update_um_data(um_key=um_key, um_key_source=UM_KEY_MASTER)
 
