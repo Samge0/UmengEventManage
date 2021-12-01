@@ -1,4 +1,4 @@
-import HomeView from "@/views/other/KeyValueManage.vue";
+import HomeView from "@/views/home/KeyManage.vue";
 import KeyValueManage from "@/views/other/KeyValueManage.vue";
 import ConfigView from "@/views/other/ConfigView.vue";
 import TaskManage from "@/views/other/TaskManage";
