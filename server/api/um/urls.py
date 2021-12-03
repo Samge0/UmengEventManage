@@ -7,6 +7,8 @@
 BASE_URL = 'https://mobile.umeng.com/ht/api/v3/app/event'
 
 
+# 自定义事件【获取今天&昨天统计的消息数量信息（只有状态正常的数据）】的api
+API_EVENT_ANALYSIS_LIST = '{BASE_URL}/analysis/list?relatedId={um_key}&dataSourceId={um_key}'
 # 自定义事件【获取列表，状态status: normal、stopped、unregistered】的api
 API_EVENT_LIST = '{BASE_URL}/list?relatedId={um_key}&dataSourceId={um_key}'
 # 自定义事件【批量还原】的api

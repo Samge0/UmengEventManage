@@ -9,6 +9,7 @@ from channels.generic.websocket import WebsocketConsumer
 
 
 # 消费者：友盟任务
+from . import config_util
 from .um import um_tasks, um_util
 
 
@@ -56,14 +57,14 @@ class UmConsumer(WebsocketConsumer):
         if 'syn' == type:
             self.send(f"开始执行任务")
             um_util.um_socks = self
-            parse_config(config)
+            config_util.parse_config(config)
             um_tasks.do_um_synchro_task()
             self.send(f"任务完成")
 
         elif 'update' == type:
             self.send(f"开始执行任务")
             um_util.um_socks = self
-            parse_config(config)
+            config_util.parse_config(config)
             um_tasks.do_add_or_update_task()
             self.send(f"任务执行完毕")
 
@@ -74,23 +75,6 @@ class UmConsumer(WebsocketConsumer):
         else:
             print("消息口令不对")
             self.send("已连接")
-
-
-def parse_config(config):
-    if config:
-        um_tasks.UM_KEY_MASTER = config.get('UM_KEY_MASTER') or ''
-        um_tasks.UM_KEY_SLAVES = (config.get('UM_KEY_SLAVES') or '').split('|') or []
-        um_util.default_headers = get_header(config)
-
-
-def get_header(config):
-    return {
-        'user-agent': config.get('USER_AGENT'),
-        'x-xsrf-token': config.get('X_XSRF_TOKEN'),
-        'x-xsrf-token-haitang': config.get('X_XSRF_HAITANG'),
-        'content-type': config.get('CONTENT_TYPE'),
-        'cookie': config.get('COOKIE'),
-    }
 
 
 def check_env(self, config):

@@ -53,8 +53,14 @@ export default defineComponent({
           "path": "/other/task",
         },
         {
-          "name": "键值管理",
+          "name": "事件管理",
           "id": "4",
+          "icon": "el-icon-setting",
+          "path": "/other/events",
+        },
+        {
+          "name": "键值管理",
+          "id": "5",
           "icon": "el-icon-setting",
           "path": "/other/kvManage",
         },

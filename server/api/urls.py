@@ -5,6 +5,7 @@
 from django.conf.urls import url
 from .views import *
 from .views_kv import *
+from .views_event import *
 from . import views_sock
 
 
@@ -22,6 +23,8 @@ urlpatterns = [
     url(r'add_kvs$', add_kvs),
     url(r'del_kv$', del_kv),
     url(r'kv_status$', kv_status),
+
+    url(r'um_event$', um_event),
 ]
 
 

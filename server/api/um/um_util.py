@@ -148,6 +148,69 @@ def refresh_local_file(um_key: str, step_tip: int):
     time.sleep(1)
 
 
+def query_event_analysis_list(um_key: str):
+    """
+    获取自定义事件列表（有效的 & 统计今天&昨天的消息数）
+
+        sortBy: 排序方式：
+                name=根据友盟自定义事件key名称排序，
+                countToday=根据今天消息数排序，
+                countYesterday=根据昨日消息数排序，
+                deviceYesterday=根据昨日独立设备数排序，
+
+        sortType：
+                desc=降序
+                asc=升序
+
+    :param um_key: 友盟key，每隔应用单独的key
+    :return:
+    """
+    url: str = urls.API_EVENT_ANALYSIS_LIST.format(BASE_URL=urls.BASE_URL, um_key=um_key)
+    data: dict = {
+        "relatedId": um_key,
+        "sortBy": "deviceYesterday",
+        "sortType": "desc",
+        "version": "",
+        "status": "normal",
+        "page": 1,
+        "pageSize": 2000,
+        "dataSourceId": um_key,
+        "version": ""
+    }
+    r = requests.post(url=url, headers=get_default_headers(), data=get_post_json(data))
+    if is_response_ok(r):
+        _print_tip(f'获取自定义事件列表（有效的 & 统计今天&昨天的消息数）成功：{um_key} \n{r.text[:200]}...')
+        file_util.save_txt_file(r.text, f'{get_temp_file_dir()}/analysis_event_lst_{um_key}.txt')
+    else:
+        _print_tip(f'获取自定义事件列表（有效的 & 统计今天&昨天的消息数）失败：{get_fail_msg(um_key=um_key, r=r)}')
+
+
+def get_all_events_with_analysis(um_key: str):
+    """
+    获取所有友盟自定义事件 & 附带消息同级数量
+    :param um_key:
+    :return:
+    """
+    json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/analysis_event_lst_{um_key}.txt') or '{}')
+    json_dict_pause = get_eval_dict(
+        file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
+    lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
+    temp_list = []
+    for item in lst:
+        temp_list.append({
+            'um_key': um_key,
+            'um_eventId': item.get('eventId'),
+            'um_name': item.get('name'),
+            'um_displayName': item.get('displayName'),
+            'um_status': item.get('status'),
+            'um_eventType': item.get('eventType'),
+            'um_countToday': item.get('countToday') or 0,
+            'um_countYesterday': item.get('countYesterday') or 0,
+            'um_deviceYesterday': item.get('deviceYesterday') or 0
+        })
+    return temp_list
+
+
 def query_event_list(um_key: str):
     """
     获取自定义事件列表（有效的）
@@ -512,6 +575,17 @@ def cache_event_list(um_keys):
         query_event_pause_list(um_key=um_key)
 
 
+def cache_analysis_event_list(um_keys):
+    """
+    根据友盟key获取对应的自定义事件列表最新数据并缓存到本地
+    :param um_keys:
+    :return:
+    """
+    for um_key in um_keys or []:
+        query_event_analysis_list(um_key=um_key)
+        query_event_pause_list(um_key=um_key)
+
+
 def get_default_headers():
     """
     获取默认的请求头
@@ -556,6 +630,33 @@ def get_eval_dict(txt: str):
         tip: str = f'get_eval_dict {txt[:200]} 转dict对象失败，e={e[:200]}'
         _print_tip(tip)
         return {}
+
+
+def is_exists_pause(um_key: str):
+    """
+    判断某个友盟key的 暂停事件 缓存文件是否存在
+    :param um_key:
+    :return:
+    """
+    return os.path.exists(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt')
+
+
+def is_exists_normal_analysis(um_key: str):
+    """
+    判断某个友盟key的 有效事件&&附带有统计消息的 缓存文件是否存在
+    :param um_key:
+    :return:
+    """
+    return os.path.exists(f'{get_temp_file_dir()}/analysis_event_lst_{um_key}.txt')
+
+
+def is_exists_normal(um_key: str):
+    """
+    判断某个友盟key的 有效事件 缓存文件是否存在
+    :param um_key:
+    :return:
+    """
+    return os.path.exists(f'{get_temp_file_dir()}/event_lst_{um_key}.txt')
 
 
 def _print_tip(tip: str):

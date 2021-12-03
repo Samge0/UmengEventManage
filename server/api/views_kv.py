@@ -1,6 +1,8 @@
 import json
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
+
+from . import config_util
 from .json_encoder import DateEncoder
 from .models import KeyValue, UmKey
 
@@ -19,27 +21,12 @@ def get_kvs(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
 
 
-def get_key_value(config: dict, kv_key: str):
-    keys = KeyValue.objects.filter(kv_key=kv_key)
-    if keys:
-        config[kv_key] = keys[0].kv_value
-
-
 @require_http_methods(["GET"])
 def get_config(request):
-    config: dict = {}
-    get_key_value(config, "CONTENT_TYPE")
-    get_key_value(config, "USER_AGENT")
-    get_key_value(config, "X_XSRF_TOKEN")
-    get_key_value(config, "X_XSRF_HAITANG")
-    get_key_value(config, "COOKIE")
-    get_key_value(config, "UM_KEY_MASTER")
-    get_key_value(config, "UM_KEY_SLAVES")
-
     r = {
         'code': 200,
         'msg': 'success',
-        'data': config
+        'data': config_util.get_config()
     }
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
 

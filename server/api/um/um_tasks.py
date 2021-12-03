@@ -31,4 +31,21 @@ def do_add_or_update_task():
     um_util.add_or_update_event_by_file(UM_KEY_MASTER)
 
 
+def get_analysis_event_list(um_key: str, refresh: bool):
+    """
+    获取友盟自定义事件列表
+    :param um_key:
+    :param refresh: 是否需要重新充网络中获取数据
+    :return:
+    """
+    need_refresh: bool = refresh \
+                         or um_util.is_exists_pause(um_key=um_key) is False \
+                         or um_util.is_exists_normal_analysis(um_key=um_key) is False
+    if need_refresh:
+        print(f'获取友盟自定义事件列表 需要刷新')
+        um_util.cache_analysis_event_list(um_keys=[um_key])
+    print(f'获取友盟自定义事件列表 直接从缓存中取')
+    return um_util.get_all_events_with_analysis(um_key=um_key)
+
+
 
