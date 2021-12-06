@@ -7,12 +7,38 @@ import {createRouter, createWebHashHistory} from "vue-router";
 
 // 2. 定义路由配置
 const routes = [
-  { path: "/", redirect: '/home'},
-  { path: "/home", component: HomeView },
-  { path: "/other/task", component: TaskManage },
-  { path: "/other/kvManage", component: KeyValueManage },
-  { path: "/other/events", component: EventsManage },
-  { path: "/other/config", component: ConfigView },
+  {
+    path: "/",
+    redirect: '/home'
+  },
+
+  {
+    path: "/home",
+    component: HomeView
+  },
+
+  {
+    path: "/other/task",
+    component: TaskManage,
+  },
+
+  {
+    path: "/other/kvManage",
+    component: KeyValueManage,
+  },
+
+  {
+    path: "/other/events",
+    component: EventsManage,
+    meta: {
+      keepAlive:true,
+     },
+  },
+
+  {
+    path: "/other/config",
+    component: ConfigView,
+  },
 ];
 
 // 3. 创建路由实例

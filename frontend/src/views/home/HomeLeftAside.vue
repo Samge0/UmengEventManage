@@ -1,5 +1,12 @@
 <template>
 <!--        左侧栏-->
+<!--  <div id="nav"  width="180px">
+    <router-link to="/home">友盟KEY</router-link> <br>
+    <router-link to="/other/config">配置管理</router-link> <br>
+    <router-link to="/other/task">任务管理</router-link> <br>
+    <router-link to="/other/events">事件管理</router-link> <br>
+    <router-link to="/other/kvManage">键值管理</router-link> <br>
+  </div>-->
     <el-aside width="180px">
       <el-menu
           text-color="#ffffff"
