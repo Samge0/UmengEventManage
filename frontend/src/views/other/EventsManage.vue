@@ -3,6 +3,7 @@
     <el-container direction="vertical"
                   class="demo-shadow">
 
+<!--      顶部栏-->
       <el-header style="height:auto;" >
         <el-row class="box-header" type="flex" justify="space-between">
 
@@ -11,9 +12,10 @@
           </el-col>
 
           <el-col span="6">
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; getUmEvents()">刷新</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="doPause">批量暂停</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'">添加事件</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="doPause">批量暂停</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="importEvents">上传事件</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportEvents">导出事件</el-button>
           </el-col>
 
         </el-row>
@@ -21,75 +23,40 @@
 
       <el-divider ></el-divider>
 
+<!--      表格-->
       <el-table
           :data="tableData"
           v-show="tableData.length > 0"
       >
         <el-table-column type="selection"/>
         <el-table-column type="index" />
-        <el-table-column prop="um_name" sortable label="事件id" width="230" />
-        <el-table-column prop="um_displayName" sortable label="事件名称" width="230" />
-        <el-table-column prop="um_countYesterday" sortable label="昨日消息数" width="120" />
-        <el-table-column prop="um_countToday" sortable label="今日消息数" width="120" />
-        <el-table-column prop="um_deviceYesterday" sortable label="昨日独立用户数" width="150" />
-<!--        操作-->
-       <el-table-column fixed="right" label="操作" min-width="280" align="right">
-          <template #default="scope">
-            <el-button class="el-button-right" type="primary" size="mini" @click="editHost(scope.$index, scope.row)" icon="el-icon-edit">编辑</el-button>
-            <el-button class="el-button-right" type="danger" size="mini" @click="deleteHost(scope.$index, scope.row)" icon="el-icon-close">暂停</el-button>
-          </template>
-        </el-table-column>
+        <el-table-column prop="um_name" sortable label="事件id" width="300" />
+        <el-table-column prop="um_displayName" sortable label="事件名称" width="300" />
+        <el-table-column prop="um_countYesterday" sortable label="昨日消息数" width="130" />
+        <el-table-column prop="um_countToday" sortable label="今日消息数" width="130" />
+        <el-table-column prop="um_deviceYesterday" sortable label="昨日独立用户数" />
       </el-table>
 
+<!--      分页 background-->
+     <el-pagination
+                    layout="sizes, prev, pager, next, jumper"
+                    :current-page="query.pg_index"
+                    :page-size="query.pg_size"
+                    :page-sizes="[15, 30, 50, 120, 200, 300, 400, 500, 600, 700, 800]"
+                    :total="total"
+                    prev-text="上一页"
+                    next-text="下一页"
+                    @current-change="onCurrentPageChange"
+                    @size-change="onPageSizeChange"
+                    v-show="tableData.length > 0"
+                    style="margin: 30px"
+     >
+     </el-pagination>
+
+<!--      空页面-->
      <el-empty description="暂无相关数据" v-show="tableData.length == 0" style="margin-top: 100px">
-       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'">添加事件</el-button>
+       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="importEvents">上传事件</el-button>
      </el-empty>
-
-      <!--弹窗-->
-      <el-dialog v-model="dialogFormVisible" title="添加事件">
-        <el-form :model="form">
-          <el-form-item label="事件id：" :label-width="formLabelWidth">
-            <el-input v-model="form.um_name" autocomplete="off"
-                      placeholder="请输入事件id"
-                      maxlength="50"
-                      show-word-limit="true"
-                      :disabled="dialogCommitTitle==`更新`"
-            ></el-input>
-          </el-form-item>
-
-          <el-form-item label="事件名称：" :label-width="formLabelWidth" required="true">
-            <el-input v-model="form.um_displayName"
-                      autocomplete="off"
-                      minlength="50"
-                      maxlength="50"
-                      show-word-limit="true"
-                      placeholder="请输入事件显示名称"
-                      clearable="true"
-            >
-            </el-input>
-          </el-form-item>
-
-          <el-form-item label="事件类型：" :label-width="formLabelWidth" >
-            <el-input v-model="form.um_eventType_int"
-                      autocomplete="off"
-                      minlength="1"
-                      maxlength="1"
-                      show-word-limit="true"
-                      placeholder="请输入事件类型（0=多参数类型；1=计算类型）"
-                      clearable="true"
-            >
-            </el-input>
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="dialogFormVisible = false">取消</el-button>
-            <el-button type="primary" @click="addOrUpdateEvent">{{dialogCommitTitle}}</el-button
-            >
-          </span>
-        </template>
-      </el-dialog>
-
     </el-container>
 
 </template>
@@ -122,7 +89,10 @@ export default defineComponent({
       query: {
         um_key: '59f935b7b27b0a7776000027',
         refresh: 0,
+        pg_index: 1,
+        pg_size: 15,
       },
+      total: 50,
       formLabelWidth: '120px',
       dialogCommitTitle: '添加',
     })
@@ -140,8 +110,10 @@ export default defineComponent({
               })
 
               // 显示列表
-              state.tableData = res.data
+              state.tableData = res.data.lst
+              state.total = res.data.total
               state.query.refresh = 0
+
             } else {
               ElMessage({
                 showClose: true,
@@ -187,6 +159,31 @@ export default defineComponent({
       console.log("添加或更新单条事件")
     }
 
+    // 导导入自定义事件
+    const importEvents = () => {
+      console.log("导导入自定义事件")
+    }
+
+    // 导出所有自定义事件
+    const exportEvents = () => {
+      console.log("导出所有自定义事件")
+    }
+
+    // 分页当前页改变的监听
+    const onCurrentPageChange = (index: any) => {
+      console.log(`onCurrentPageChange ${index}`)
+      state.query.pg_index = index
+      getUmEvents()
+    }
+
+    // 分页size改变监听
+    const onPageSizeChange = (size: any) => {
+      console.log(`onPageSizeChange ${size}`)
+      state.query.pg_index = 1
+      state.query.pg_size = size
+      getUmEvents()
+    }
+
     return {
       ...toRefs(state),
       getUmEvents,
@@ -194,6 +191,10 @@ export default defineComponent({
       deleteHost,
       doPause,
       addOrUpdateEvent,
+      onCurrentPageChange,
+      onPageSizeChange,
+      exportEvents,
+      importEvents,
     }
   },
 })
