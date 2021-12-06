@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'kv_status$', kv_status),
 
     url(r'um_event$', um_event),
+    url(r'um_event_export$', um_event_export),
 ]
 
 

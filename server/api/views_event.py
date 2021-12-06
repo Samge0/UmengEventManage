@@ -48,3 +48,36 @@ def um_event(request):
             }
         }
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+
+
+@require_http_methods(["POST"])
+def um_event_export(request):
+    """
+    导出所有友盟自定义事件
+    :param request:
+    :return:
+    """
+    post_body = json.loads(request.body)
+    um_key: str = post_body.get('um_key')
+    refresh: bool = post_body.get('refresh') == 1
+    if not um_key:
+        r = {
+            'code': 200,
+            'msg': '导出失败，要查询的key为空',
+            'data': list(UmKey.objects.filter().values())
+        }
+    else:
+        config_util.parse_config(None)
+        results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
+        txt: str = None
+        for item in results:
+            if txt:
+                txt = f"{txt}\n{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
+            else:
+                txt = f"{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
+        r = {
+            'code': 200,
+            'msg': '查询成功',
+            'data': txt
+        }
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)

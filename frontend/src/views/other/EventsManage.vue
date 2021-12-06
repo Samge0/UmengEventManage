@@ -64,6 +64,7 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
+import {saveAs} from "file-saver";
 export default defineComponent({
   created() {
     this.getUmEvents()
@@ -135,7 +136,7 @@ export default defineComponent({
         um_displayName: row.um_displayName,
         um_status: row.um_status,
         um_eventType: row.um_eventType,
-        um_eventType_int: row.um_eventType == "multiattribute" ? 0 : 1,
+        um_eventType_int: row.um_eventType_int,
         um_countToday: row.um_countToday,
         um_countYesterday: row.um_countYesterday,
         um_deviceYesterday: row.um_deviceYesterday,
@@ -166,7 +167,23 @@ export default defineComponent({
 
     // 导出所有自定义事件
     const exportEvents = () => {
-      console.log("导出所有自定义事件")
+      axios.post('http://127.0.0.1:8000/api/um_event_export', JSON.stringify(state.query))
+          .then((response:any) => {
+            const res = response.data;
+            if (res.code === 200) {
+              // 显示列表
+              let str = new Blob([res.data], {type: 'text/plain;charset=utf-8'});
+              // 注意：这里要手动写上文件的后缀名
+              saveAs(str, `友盟自定义事件_${state.query.um_key}.txt`);
+            } else {
+              ElMessage({
+                showClose: true,
+                message: 'getUmEvents Fail：' + res.msg,
+                type: 'error',
+              })
+            }
+            console.log(res)
+          })
     }
 
     // 分页当前页改变的监听

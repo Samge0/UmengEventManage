@@ -204,6 +204,7 @@ def get_all_events_with_analysis(um_key: str):
             'um_displayName': item.get('displayName'),
             'um_status': item.get('status'),
             'um_eventType': item.get('eventType'),
+            'um_eventType_int': 0 if item.get('eventType') == 'multiattribute' else 1,
             'um_countToday': item.get('countToday') or 0,
             'um_countYesterday': item.get('countYesterday') or 0,
             'um_deviceYesterday': item.get('deviceYesterday') or 0
