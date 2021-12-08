@@ -527,8 +527,11 @@ def upload_event(um_key: str, file_path: str):
     r = requests.post(url=url, data={}, headers=headers, files=files)
     if is_response_ok(r):
         _print_tip(f'批量导入 自定义事件 成功：{file_path} -> {um_key} \n{r.text[:200]}')
+        return 200, "上传成功"
     else:
-        _print_tip(f'批量导入 自定义事件 失败：{get_fail_msg(um_key=um_key, r=r)}')
+        fail_msg: str = get_fail_msg(um_key=um_key, r=r) or "上传失败"
+        _print_tip(f'批量导入 自定义事件 失败：{fail_msg}')
+        return get_eval_dict(r.text).get('code') or -1, fail_msg
 
 
 def export_event(um_key: str, file_path: str = None):

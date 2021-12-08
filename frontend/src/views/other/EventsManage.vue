@@ -11,16 +11,34 @@
             <a>事件管理</a>
           </el-col>
 
-          <el-col span="6">
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="doPause">批量暂停</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="importEvents">上传事件</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportEvents">导出事件</el-button>
+          <el-col span=6>
+<!--            当前选择当前友盟key-->
+            <el-select v-model="query.um_key"
+                       placeholder="Select"
+                       size="mini"
+                       class="el-button-add"
+                       style="margin-right: 20px"
+                       @change="onUmKeyChange"
+            >
+              <el-option
+                v-for="item in umKeys"
+                :key="item.um_key"
+                :label="item.um_name"
+                :value="item.um_key"
+              >
+              </el-option>
+            </el-select>
+
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="doPause">批量暂停</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="dialogFormVisible = true;">上传事件</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportEvents">导出事件</el-button>
           </el-col>
 
         </el-row>
       </el-header>
 
+<!--      分割线-->
       <el-divider ></el-divider>
 
 <!--      表格-->
@@ -55,8 +73,29 @@
 
 <!--      空页面-->
      <el-empty description="暂无相关数据" v-show="tableData.length == 0" style="margin-top: 100px">
-       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="importEvents">上传事件</el-button>
+       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="dialogFormVisible = true;">上传事件</el-button>
      </el-empty>
+
+      <!--弹窗-->
+      <el-dialog v-model="dialogFormVisible" title="上传事件">
+          <el-upload
+              ref="upload"
+              action="http://127.0.0.1:8000/api/um_event_import"
+              :on-preview="handlePreview"
+              :on-success="handleUploadSucceed"
+              :file-list="fileList"
+              :show-file-list="false"
+              multiple="false"
+              drag="true"
+              :data="query.um_key"
+            >
+            <el-button size="mini" icon="el-icon-upload" style="background-color: transparent; border: 0px"></el-button>
+            <div class="el-upload__text">
+              拖拽文件到这里 <em> 或点击上传 </em>
+            </div>
+          </el-upload>
+      </el-dialog>
+
     </el-container>
 
 </template>
@@ -67,12 +106,17 @@ import {ElMessage} from "element-plus";
 import {saveAs} from "file-saver";
 export default defineComponent({
   created() {
-    this.getUmEvents()
+    this.getUmKeys()
   },
   setup() {
     const axios = require('axios');
 
     const state = reactive({
+
+      umKeys:[],
+
+      fileList:[],
+
       tableData: [],
       dialogFormVisible: false,
       form: {
@@ -88,7 +132,7 @@ export default defineComponent({
         um_deviceYesterday: 0,
       },
       query: {
-        um_key: '59f935b7b27b0a7776000027',
+        um_key: '',
         refresh: 0,
         pg_index: 1,
         pg_size: 15,
@@ -97,6 +141,29 @@ export default defineComponent({
       formLabelWidth: '120px',
       dialogCommitTitle: '添加',
     })
+
+    // 获取友盟key列表
+    const getUmKeys = () => {
+      axios.get('http://127.0.0.1:8000/api/get_um_keys')
+          .then((response:any) => {
+            const res = response.data;
+            if (res.code === 200) {
+              // 显示
+              if(res.data.length > 0){
+                state.umKeys = res.data
+                state.query.um_key = res.data[0].um_key
+                getUmEvents()
+              }
+            } else {
+              ElMessage({
+                showClose: true,
+                message: 'getUmKeys Fail：' + res.msg,
+                type: 'error',
+              })
+            }
+            console.log(res)
+          })
+    }
 
     // 获取事件列表
     const getUmEvents = () => {
@@ -201,9 +268,33 @@ export default defineComponent({
       getUmEvents()
     }
 
+    // 文件上传预备
+    const handlePreview = (file: any) => {
+      console.log(`handlePreview ${file}`)
+    }
+
+    // 文件上传成
+    const handleUploadSucceed = (response: any, file: any, file_list: any) => {
+      state.dialogFormVisible = false
+      console.log(`handleUploadSucceed ${response }${file} ${file_list}`)
+      ElMessage({
+                showClose: true,
+                message: '上传成功',
+                type: 'success',
+              })
+    }
+
+    const onUmKeyChange = (um_key: any) => {
+      console.log(`onUmKeyChange ${um_key}`)
+      state.query.pg_index = 1
+      getUmEvents()
+    }
+
     return {
       ...toRefs(state),
+      getUmKeys,
       getUmEvents,
+
       editHost,
       deleteHost,
       doPause,
@@ -212,6 +303,11 @@ export default defineComponent({
       onPageSizeChange,
       exportEvents,
       importEvents,
+
+      handlePreview,
+      handleUploadSucceed,
+
+      onUmKeyChange,
     }
   },
 })
