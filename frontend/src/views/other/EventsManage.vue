@@ -30,9 +30,10 @@
             </el-select>
 
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="doPause">批量暂停</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="doStop">批量暂停</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="dialogFormVisible = true;">上传事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportEvents">导出事件</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-sort" @click="showDrawer = true;">事件筛选</el-button>
           </el-col>
 
         </el-row>
@@ -76,7 +77,7 @@
        <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="dialogFormVisible = true;">上传事件</el-button>
      </el-empty>
 
-      <!--弹窗-->
+      <!--上传事件的弹窗-->
       <el-dialog v-model="dialogFormVisible" title="上传事件">
           <el-upload
               ref="upload"
@@ -96,6 +97,75 @@
           </el-upload>
       </el-dialog>
 
+<!--      筛选-->
+      <el-drawer
+        v-model="showDrawer"
+        title="事件筛选"
+        direction="rtl"
+        :before-close="onFilterSubmit"
+      >
+
+        <el-form ref="form"
+                 :model="filterForm"
+                 label-width="120px"
+                 label-position="right"
+                 style="margin-right: 40px; margin-top: 30px"
+        >
+
+          <el-form-item label="关键词">
+            <el-input v-model="filterForm.keyword"></el-input>
+          </el-form-item>
+
+          <el-form-item label="事件状态" >
+            <el-col>
+              <el-select v-model="filterForm.state" placeholder="请选择事件状态">
+                <el-option label="不限状态" value=""></el-option>
+                <el-option label="有效事件" value="normal"></el-option>
+                <el-option label="暂停事件" value="stopped"></el-option>
+              </el-select>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item label="事件类型" >
+            <el-col>
+              <el-select v-model="filterForm.type" placeholder="请选择事件类型">
+                <el-option label="不限类型" value=""></el-option>
+                <el-option label="多参数类型" value="0"></el-option>
+                <el-option label="计算类型" value="1"></el-option>
+              </el-select>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item label="排序字段">
+            <el-col>
+              <el-select v-model="filterForm.sort_by" placeholder="请选择排序字段">
+                <el-option label="事件id" value="name"></el-option>
+                <el-option label="事件名称" value="displayName"></el-option>
+                <el-option label="昨日消息数" value="countYesterday"></el-option>
+                <el-option label="今日消息数" value="countToday"></el-option>
+                <el-option label="昨日设备数" value="deviceYesterday"></el-option>
+              </el-select>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item label="排序方式">
+            <el-col>
+              <el-select v-model="filterForm.sort" placeholder="请选择排序方式">
+                <el-option label="降序" value="desc"></el-option>
+                <el-option label="升序" value="asc"></el-option>
+              </el-select>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item>
+            <el-button class="el-button-filter" @click="onFilterReset">重置</el-button>
+            <el-button class="el-button-filter" type="primary" @click="onFilterSubmit">提交</el-button>
+          </el-form-item>
+
+        </el-form>
+
+      </el-drawer>
+
     </el-container>
 
 </template>
@@ -106,12 +176,17 @@ import {ElMessage} from "element-plus";
 import {saveAs} from "file-saver";
 export default defineComponent({
   created() {
+    this.setDefaultFilterFrom()
     this.getUmKeys()
   },
   setup() {
     const axios = require('axios');
 
     const state = reactive({
+
+      filterForm: {},
+
+      showDrawer: false,
 
       umKeys:[],
 
@@ -141,6 +216,17 @@ export default defineComponent({
       formLabelWidth: '120px',
       dialogCommitTitle: '添加',
     })
+
+    // 设置默认的筛选view
+    const setDefaultFilterFrom =()=>{
+      state.filterForm = {
+        keyword: '',
+        sort_by: 'deviceYesterday',
+        sort: 'desc',
+        state: '',
+        type: '1',
+      }
+    }
 
     // 获取友盟key列表
     const getUmKeys = () => {
@@ -218,7 +304,7 @@ export default defineComponent({
     }
 
     // 批量暂停
-    const doPause = () => {
+    const doStop = () => {
       console.log("批量暂停")
     }
 
@@ -284,10 +370,24 @@ export default defineComponent({
               })
     }
 
+    // 友盟key选中状态监听
     const onUmKeyChange = (um_key: any) => {
       console.log(`onUmKeyChange ${um_key}`)
       state.query.pg_index = 1
       getUmEvents()
+    }
+
+    // 筛选view重置监听
+    const onFilterReset = () => {
+      console.log(`onFilterReset`)
+      setDefaultFilterFrom()
+    }
+
+    // 筛选view关闭（提交）监听
+    const onFilterSubmit = () => {
+      console.log(`onFilterSubmit ${state.filterForm}`)
+      console.log(state.filterForm)
+      state.showDrawer = false
     }
 
     return {
@@ -297,7 +397,7 @@ export default defineComponent({
 
       editHost,
       deleteHost,
-      doPause,
+      doStop,
       addOrUpdateEvent,
       onCurrentPageChange,
       onPageSizeChange,
@@ -308,6 +408,10 @@ export default defineComponent({
       handleUploadSucceed,
 
       onUmKeyChange,
+
+      onFilterSubmit,
+      onFilterReset,
+      setDefaultFilterFrom,
     }
   },
 })
@@ -345,6 +449,11 @@ export default defineComponent({
 .el-button-add{
   height: 20px;
   width: 100px;
+}
+
+.el-button-filter{
+  width: 150px;
+  margin-top: 40px;
 }
 
 .el-divider{

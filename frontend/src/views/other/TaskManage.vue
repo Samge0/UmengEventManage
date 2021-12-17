@@ -11,10 +11,10 @@
           </el-col>
 
           <el-col span="6">
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" @click="timeLineList=[]">清空</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="timeLineList=[]">清空</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="initWebsocket">连接sock</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" @click="stopTask">中止任务</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="startUpdateTask">执行【更新】任务</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="stopTask">中止任务</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="dialogFormVisible = true;">上传/更新事件</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-phone" @click="startSynTask">执行【同步】任务</el-button>
           </el-col>
 
@@ -38,6 +38,26 @@
         {{ item.content }}
       </el-timeline-item>
     </el-timeline>
+
+
+    <!--上传事件的弹窗-->
+    <el-dialog v-model="dialogFormVisible" title="上传事件">
+        <el-upload
+            ref="upload"
+            action="http://127.0.0.1:8000/api/um_event_update"
+            :on-success="handleUploadSucceed"
+            :file-list="fileList"
+            :show-file-list="false"
+            multiple="false"
+            drag="true"
+            :data="umConfig.UM_KEY_MASTER"
+          >
+          <el-button size="mini" icon="el-icon-upload" style="background-color: transparent; border: 0px"></el-button>
+          <div class="el-upload__text">
+            拖拽文件到这里 <em> 或点击上传 </em>
+          </div>
+        </el-upload>
+    </el-dialog>
 
 
   </el-container>
@@ -100,6 +120,9 @@ export default defineComponent({
           timestamp: "",
         },
       ],
+
+      dialogFormVisible: false,
+      fileList:[],
     })
 
     /**
@@ -287,6 +310,18 @@ export default defineComponent({
           })
     }
 
+    // 文件上传成
+    const handleUploadSucceed = (response: any, file: any, file_list: any) => {
+      state.dialogFormVisible = false
+      console.log(`handleUploadSucceed ${response }${file} ${file_list}`)
+      ElMessage({
+                showClose: true,
+                message: '上传成功，开始同步更新友盟事件',
+                type: 'success',
+              })
+      startUpdateTask()
+    }
+
     return {
       ...toRefs(state),
       stopTask,
@@ -309,6 +344,8 @@ export default defineComponent({
 
       startTimer,
       stopTimer,
+
+      handleUploadSucceed,
     }
   },
 })
