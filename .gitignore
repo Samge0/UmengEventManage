@@ -21,6 +21,7 @@ db.sqlite3
 install.sh
 *.pyc
 .venv
+server/api/um/temp_files/*.txt
 
 /temp_files/*.txt
 settings.local.py
