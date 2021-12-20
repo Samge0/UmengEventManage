@@ -1,11 +1,22 @@
 import json
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from .json_encoder import DateEncoder
 from .models import UmKey, KeyValue
 
 # json格式
 CONTENT_TYPE_JSON = "application/json,charset=utf-8"
+
+
+@require_http_methods(["GET"])
+def index(request):
+    """
+    默认首页
+    :param request: request object
+    :return: page
+    """
+    return render(request, 'index.html')
 
 
 @require_http_methods(["GET"])

@@ -11,6 +11,8 @@ from . import views_sock
 
 # http路由
 urlpatterns = [
+    url(r'^$', index, name='index'),
+
     url(r'get_um_keys$', get_um_keys),
     url(r'add_um_key$', add_um_key),
     url(r'del_um_key$', del_um_key),
