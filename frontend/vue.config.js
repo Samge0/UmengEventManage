@@ -3,6 +3,8 @@ module.exports = {
     // 设置打包（npm run build）后存放位置，这里存放的位置供django配置index页面
     outputDir: "../server/api/templates",
     assetsDir: "static",
+    //生产环境是否生成 sourceMap 文件，一般情况不建议打开
+    productionSourceMap: false,
 
     devServer: {
         open: true,
@@ -11,20 +13,20 @@ module.exports = {
         https: false,
         hotOnly: false,
         // http 代理配置
-        proxy: {
-
-            '/api': {
-                target: 'http://localhost',
-                changeOrigin: true,
-                secure: false,
-                pathRewrite: {
-                    '^/api': '/'
-                }
-            }
-        },
+        proxy: 'http://localhost:8000',
+        // proxy: {
+        //     '/api': {
+        //         target: 'http://localhost',
+        //         changeOrigin: true,
+        //         secure: false,
+        //         pathRewrite: {
+        //             '^/api': '/'
+        //         }
+        //     }
+        // },
         before: (app) => {}
     },
     css: {
-        sourceMap: true,
+        sourceMap: false,
     },
 }
