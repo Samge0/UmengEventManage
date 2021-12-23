@@ -52,6 +52,7 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
+import {api} from "@/axios/api";
 
 export default defineComponent({
   components: {
@@ -60,8 +61,6 @@ export default defineComponent({
     this.getConfig()
   },
   setup() {
-    const axios = require('axios');
-
     const state = reactive({
       form: {
         CONTENT_TYPE: '',
@@ -77,8 +76,7 @@ export default defineComponent({
     // 保存/更新 主机
     const addOrUpdateKv = () => {
       console.log(JSON.stringify(state.form))
-
-      axios.post('http://127.0.0.1:8000/api/save_config', JSON.stringify(state.form))
+      api.um.save_config(state.form)
           .then((response:any) => {
             const res = response.data;
             let msgType: any = res.code === 200? 'success' : 'error'
@@ -92,7 +90,7 @@ export default defineComponent({
     }
 
     const getConfig = () => {
-      axios.get('http://127.0.0.1:8000/api/get_config')
+      api.um.get_config()
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {

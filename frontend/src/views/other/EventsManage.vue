@@ -81,7 +81,7 @@
       <el-dialog v-model="dialogFormVisible" title="上传事件">
           <el-upload
               ref="upload"
-              action="http://127.0.0.1:8000/api/um_event_import"
+              :action="uploadUrl"
               :on-preview="handlePreview"
               :on-success="handleUploadSucceed"
               :file-list="fileList"
@@ -174,14 +174,13 @@
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {saveAs} from "file-saver";
+import {api} from "@/axios/api";
 export default defineComponent({
   created() {
     this.setDefaultFilterFrom()
     this.getUmKeys()
   },
   setup() {
-    const axios = require('axios');
-
     const state = reactive({
 
       filterForm: {},
@@ -191,6 +190,8 @@ export default defineComponent({
       umKeys:[],
 
       fileList:[],
+
+      uploadUrl:api.um.um_event_import,
 
       tableData: [],
       dialogFormVisible: false,
@@ -230,7 +231,7 @@ export default defineComponent({
 
     // 获取友盟key列表
     const getUmKeys = () => {
-      axios.get('http://127.0.0.1:8000/api/get_um_keys')
+      api.um.get_um_keys()
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
@@ -253,7 +254,7 @@ export default defineComponent({
 
     // 获取事件列表
     const getUmEvents = () => {
-      axios.post('http://127.0.0.1:8000/api/um_event', JSON.stringify(state.query))
+      api.um.um_event(state.query)
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
@@ -320,7 +321,7 @@ export default defineComponent({
 
     // 导出所有自定义事件
     const exportEvents = () => {
-      axios.post('http://127.0.0.1:8000/api/um_event_export', JSON.stringify(state.query))
+      api.um.um_event_export(state.query)
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {

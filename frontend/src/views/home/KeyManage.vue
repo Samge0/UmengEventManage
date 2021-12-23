@@ -90,13 +90,12 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
+import {api} from "@/axios/api";
 export default defineComponent({
   created() {
     this.getUmKeys()
   },
   setup() {
-    const axios = require('axios');
-
     const state = reactive({
       tableData: [],
       dialogFormVisible: false,
@@ -122,7 +121,7 @@ export default defineComponent({
       }
       state.dialogFormVisible = false
       console.log(JSON.stringify(state.form))
-      axios.post('http://127.0.0.1:8000/api/add_um_key', JSON.stringify(state.form))
+      api.um.add_um_key(state.form)
           .then((response:any) => {
             const res = response.data;
             state.tableData = res.data  // 显示列表
@@ -137,7 +136,7 @@ export default defineComponent({
     }
 
     const getUmKeys = () => {
-      axios.get('http://127.0.0.1:8000/api/get_um_keys')
+      api.um.get_um_keys()
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
@@ -175,7 +174,7 @@ export default defineComponent({
     // 删除主机
     const deleteHost = (index: any, row: any) => {
        console.log(row)
-       axios.post('http://127.0.0.1:8000/api/del_um_key', JSON.stringify(row))
+       api.um.del_um_key(row)
           .then((response:any) => {
             const res = response.data;
             state.tableData = res.data  // 显示列表
@@ -192,7 +191,7 @@ export default defineComponent({
     // 设置master
     const setMaster = (index: any, row: any) => {
       console.log(row)
-       axios.post('http://127.0.0.1:8000/api/um_key_master', JSON.stringify(row))
+      api.um.um_key_master(row)
           .then((response:any) => {
             const res = response.data;
             state.tableData = res.data  // 显示列表

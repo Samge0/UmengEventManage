@@ -96,13 +96,12 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
+import {api} from "@/axios/api";
 export default defineComponent({
   created() {
     this.getKvs()
   },
   setup() {
-    const axios = require('axios');
-
     const state = reactive({
       tableData: [],
       dialogFormVisible: false,
@@ -137,7 +136,7 @@ export default defineComponent({
       }
       state.dialogFormVisible = false
       console.log(JSON.stringify(state.form))
-      axios.post('http://127.0.0.1:8000/api/add_kv', JSON.stringify(state.form))
+      api.um.add_kv(state.form)
           .then((response:any) => {
             const res = response.data;
             state.tableData = res.data  // 显示列表
@@ -152,7 +151,7 @@ export default defineComponent({
     }
 
     const getKvs = () => {
-      axios.get('http://127.0.0.1:8000/api/get_kvs')
+      api.um.get_kvs()
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
@@ -191,7 +190,7 @@ export default defineComponent({
     // 删除主机
     const deleteKv = (index: any, row: any) => {
        console.log(row)
-       axios.post('http://127.0.0.1:8000/api/del_kv', JSON.stringify(row))
+       api.um.del_kv(row)
           .then((response:any) => {
             const res = response.data;
             state.tableData = res.data  // 显示列表
@@ -207,8 +206,8 @@ export default defineComponent({
 
     // 设置master
     const setKvStatus = (index: any, row: any) => {
-      console.log(row)
-       axios.post('http://127.0.0.1:8000/api/kv_status', JSON.stringify(row))
+       console.log(row)
+       api.um.kv_status(row)
           .then((response:any) => {
             const res = response.data;
             state.tableData = res.data  // 显示列表

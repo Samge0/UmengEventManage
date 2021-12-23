@@ -44,7 +44,7 @@
     <el-dialog v-model="dialogFormVisible" title="上传事件">
         <el-upload
             ref="upload"
-            action="http://127.0.0.1:8000/api/um_event_update"
+            :action="uploadUrl"
             :on-success="handleUploadSucceed"
             :file-list="fileList"
             :show-file-list="false"
@@ -68,6 +68,7 @@
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {Socket} from "socket.io-client/build/esm/socket";
+import {api} from "@/axios/api";
 
 let socketClient: Socket|any = null;
 let timer: Socket|any = null;
@@ -94,8 +95,6 @@ export default defineComponent({
   },
 
   setup() {
-    const axios = require('axios');
-
     const state = reactive( {
       // 配置信息
       umConfig: {
@@ -123,6 +122,7 @@ export default defineComponent({
 
       dialogFormVisible: false,
       fileList:[],
+      uploadUrl: api.um.um_event_update,
     })
 
     /**
@@ -247,7 +247,7 @@ export default defineComponent({
      * 初始化websocket
      */
     const initWebsocket = () => {
-      socketClient = new WebSocket("ws://127.0.0.1:8000/ws/um");
+      socketClient = new WebSocket(api.um.um_socket);
       socketClient.onmessage = websocketOnMessage;
       socketClient.onopen = websocketOnOpen;
       socketClient.onconnect = websocketOnConnect;
@@ -287,7 +287,7 @@ export default defineComponent({
      * 获取配置信息
      */
     const getConfig = () => {
-      axios.get('http://127.0.0.1:8000/api/get_config')
+      api.um.get_config()
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
