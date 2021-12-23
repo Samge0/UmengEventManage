@@ -1,7 +1,9 @@
 import HomeView from "@/views/home/KeyManage.vue";
 import KeyValueManage from "@/views/other/KeyValueManage.vue";
 import ConfigView from "@/views/other/ConfigView.vue";
+// @ts-ignore
 import TaskManage from "@/views/other/TaskManage";
+// @ts-ignore
 import EventsManage from "@/views/other/EventsManage";
 import {createRouter, createWebHashHistory} from "vue-router";
 
