@@ -94,7 +94,8 @@ def add_or_update_event_by_file(um_key: str, file_path: str=None):
 
     # 获取当前已存在的友盟id，用于判断更新
     json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
-    json_dict_pause = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict_pause = get_eval_dict(
+        file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     curr_keys = ["%s" % item.get('name') for item in lst]
 
@@ -352,7 +353,8 @@ def event_restore_by_source(um_key: str, um_key_source: str):
     :return:
     """
     json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
-    json_dict_source = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key_source}.txt') or '{}')
+    json_dict_source = get_eval_dict(
+        file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key_source}.txt') or '{}')
     source_key_names = ['%s' % item.get('name') for item in get_event_list(json_dict=json_dict_source)]
     ids = []
     for item in get_event_list(json_dict=json_dict):
@@ -410,7 +412,8 @@ def update_event_multiattribute_to_calculation(um_key: str):
     :return:
     """
     json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
-    json_dict_pause = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict_pause = get_eval_dict(
+        file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     succeed_count: int = 0
     fail_count: int = 0
@@ -440,7 +443,8 @@ def update_event_display_name(um_key: str, um_key_source: str):
     :return:
     """
     json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
-    json_dict_source = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key_source}.txt') or '{}')
+    json_dict_source = get_eval_dict(
+        file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key_source}.txt') or '{}')
     for item in get_event_list(json_dict=json_dict):
         for item_source in get_event_list(json_dict=json_dict_source):
             if item.get('name') == item_source.get('name'):
@@ -463,7 +467,8 @@ def update_display_name_to_key_name(um_key: str, key_word: str):
     if not key_word:
         return
     json_dict = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
-    json_dict_pause = get_eval_dict(file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
+    json_dict_pause = get_eval_dict(
+        file_util.read_txt_file(f'{get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
     lst = list(get_event_list(json_dict=json_dict)) + list(get_event_list(json_dict=json_dict_pause))
     for item in lst:
         key_name: str = item.get('name')

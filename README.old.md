@@ -1,5 +1,5 @@
 ### 一、介绍
-友盟自定义事件多应用同步小工具（django+vue版本）后续计划打为docker包，如需直接运行版本，可以切换到[original](https://gitee.com/samge007/UmengEventManage/tree/original) 分支
+友盟自定义事件多应用同步小工具（django+vue版本），如需直接运行版本，可以切换到[original](https://gitee.com/samge007/UmengEventManage/tree/original) 分支
 
 
 ### 二、流程简介
@@ -19,29 +19,28 @@
 
 ### 三、使用
 
-- 创建本地目录，用于挂载docker运行时的log目录
+- 安装django依赖
 ```
-mkdir -p ~/umem/log
-mkdir -p ~/umem/db
+pip install -r requirements.txt
+```
+- 初始化数据库
+```
+cd server && python manage.py makemigrations api && python manage.py migrate
+```
+- 安装vue前端依赖，先 cd frontend 目录下，
+```
+npm i
+```
+- 运行django服务
+```
+cd server && python manage.py runserver 0:8000
+```
+- 运行vue前端界面
+```
+cd frontend && npm run serve
 ```
 
-- run docker （ -e LANG=C.UTF-8 是解决python处理中文的问题, 这里的/home/samge/umem是对应宿主机的绝对路径 ）:
-```
-docker run -d \
--v /home/samge/umem/db:/app/db \
--v /home/samge/umem/log:/app/log \
--p 8000:8000 \
--p 9001:9001 \
---name umem \
--e LANG=C.UTF-8 \
-samge/umem:v1
-```
-
-### 四、访问 && 截图
-
-[管理页面地址：http://localhost:8000](http://localhost:8000)
-
-[Supervisor管理页面：http://localhost:9001/](http://localhost:9001/)
+### 四、截图
 
 ![Image text](screenshots/img1.png)
 

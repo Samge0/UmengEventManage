@@ -1,6 +1,8 @@
 #!/bin/bash
 
-cd /app/server
-python manage.py makemigrations api
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
+cd /app
+python3 manage.py migrate
+
+# 启动supervisor
+unlink /var/run/supervisor.sock
+supervisord -c /app/docker/conf/supervisord.conf

@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 
 from . import config_util
 from .json_encoder import DateEncoder
-from .models import KeyValue, UmKey
+from .models import KeyValue
 
 # json格式
 CONTENT_TYPE_JSON = "application/json,charset=utf-8"

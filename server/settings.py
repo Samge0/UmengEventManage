@@ -12,8 +12,11 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
+# 正式环境需要设置为False
+DEBUG = True
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -22,19 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-!m-+)@%lmta**b2%e%w*eh9z#u$-lxd$y#q^b3#u-5vvc^uqma'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = [
-    '*'
-]
-# ALLOWED_HOSTS = [
-#     '127.0.0.1'
-# ]
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,7 +41,18 @@ INSTALLED_APPS = [
 ]
 
 # 指定ASGI的路由地址 channels
-ASGI_APPLICATION = 'server.asgi.application'
+ASGI_APPLICATION = 'server.routing.app'
+
+# docker run -p 6379:6379 -d redis:5
+# python3 -m pip install channels_redis
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -80,7 +84,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'server.wsgi.application'
+WSGI_APPLICATION = 'server.wsgi.app'
 
 
 # Database
@@ -90,6 +94,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR.parent / 'db/db.sqlite3',
+        'TEST': {
+            'NAME': os.path.join(BASE_DIR, 'db_test.sqlite3')
+        },
     }
 }
 
@@ -134,7 +141,7 @@ STATIC_URL = '/static/'
 
 # 配置静态文件夹路径
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'api/templates/static'),
+    os.path.join(BASE_DIR.parent, 'api/templates/static'),
 )
 
 # Default primary key field type

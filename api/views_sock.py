@@ -3,7 +3,6 @@
 # @Time    : 2021/11/26 上午10:30
 # @Author  : Samge
 import json
-import time
 
 from channels.generic.websocket import WebsocketConsumer
 

@@ -6,7 +6,6 @@ from django.conf.urls import url
 from .views import *
 from .views_kv import *
 from .views_event import *
-from . import views_sock
 
 
 # http路由
@@ -28,10 +27,4 @@ urlpatterns = [
     url(r'um_event_export$', um_event_export),
     url(r'um_event_import$', um_event_import),
     url(r'um_event_update$', um_event_update),
-]
-
-
-# socks路由
-websocket_urlpatterns = [
-    url(r'ws/um', views_sock.UmConsumer.as_asgi()),
 ]

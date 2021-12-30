@@ -7,7 +7,7 @@ import {Base} from "@/axios/base";
 
 /* 实例化axios请求配置 */
 const instance = axios.create({
-  baseURL: Base.BASE_URL,
+  // baseURL: Base.BASE_URL,
   timeout: 1000 * 30,
   headers: {
     "Content-Type": "application/json;charset=UTF-8",
