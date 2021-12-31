@@ -175,7 +175,6 @@ import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {saveAs} from "file-saver";
 import {api} from "@/axios/api";
-import {toast} from "@/utils/toast";
 export default defineComponent({
   created() {
     this.setDefaultFilterFrom()
@@ -233,35 +232,22 @@ export default defineComponent({
     // 获取友盟key列表
     const getUmKeys = () => {
       api.um.get_um_keys()
-          .then((response:any) => {
-            const res = response.data;
-            if (res.code === 200) {
-              // 显示
-              if(res.data.length > 0){
-                state.umKeys = res.data
-                state.query.um_key = res.data[0].um_key
-                getUmEvents()
-              }
-            } else {
-               toast.showError(res.msg)
+          .then((res:any) => {
+            if(res.data.data.length > 0){
+              state.umKeys = res.data.data
+              state.query.um_key = res.data.data[0].um_key
+              getUmEvents()
             }
-            console.log(res)
           })
     }
 
     // 获取事件列表
     const getUmEvents = () => {
       api.um.um_event(state.query)
-          .then((response:any) => {
-            const res = response.data;
-            if (res.code === 200) {
-              state.tableData = res.data.lst
-              state.total = res.data.total
-              state.query.refresh = 0
-            } else {
-              toast.showError(res.msg)
-            }
-            console.log(res)
+          .then((res:any) => {
+            state.tableData = res.data.data.lst
+            state.total = res.data.data.total
+            state.query.refresh = 0
           })
     }
 
@@ -307,17 +293,9 @@ export default defineComponent({
     // 导出所有自定义事件
     const exportEvents = () => {
       api.um.um_event_export(state.query)
-          .then((response:any) => {
-            const res = response.data;
-            if (res.code === 200) {
-              // 显示列表
-              let str = new Blob([res.data], {type: 'text/plain;charset=utf-8'});
-              // 注意：这里要手动写上文件的后缀名
-              saveAs(str, `友盟自定义事件_${state.query.um_key}.txt`);
-            } else {
-              toast.showError(res.msg)
-            }
-            console.log(res)
+          .then((res:any) => {
+            let str = new Blob([res.data.data], {type: 'text/plain;charset=utf-8'});
+            saveAs(str, `友盟自定义事件_${state.query.um_key}.txt`);
           })
     }
 

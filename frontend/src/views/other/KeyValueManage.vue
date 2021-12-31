@@ -95,7 +95,6 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
-import {ElMessage} from "element-plus";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 export default defineComponent({
@@ -130,29 +129,15 @@ export default defineComponent({
       state.dialogFormVisible = false
       console.log(JSON.stringify(state.form))
       api.um.add_kv(state.form)
-          .then((response:any) => {
-            const res = response.data;
-            state.tableData = res.data  // 显示列表
-            let msgType: any = res.code === 200? 'success' : 'error'
-            ElMessage({
-                showClose: true,
-                message: res.msg,
-                type: msgType,
-              })
-            console.log(res)
+          .then((res:any) => {
+            state.tableData = res.data.data  // 显示列表
           })
     }
 
     const getKvs = () => {
       api.um.get_kvs()
-          .then((response:any) => {
-            const res = response.data;
-            if (res.code === 200) {
-              state.tableData = res.data
-            } else {
-              toast.showError(res.msg)
-            }
-            console.log(res)
+          .then((res:any) => {
+            state.tableData = res.data.data
           })
     }
 
@@ -173,16 +158,8 @@ export default defineComponent({
     const deleteKv = (index: any, row: any) => {
        console.log(row)
        api.um.del_kv(row)
-          .then((response:any) => {
-            const res = response.data;
-            state.tableData = res.data  // 显示列表
-            let msgType: any = res.code === 200? 'success' : 'error'
-            ElMessage({
-                showClose: true,
-                message: res.msg,
-                type: msgType,
-              })
-            console.log(res)
+          .then((res:any) => {
+            state.tableData = res.data.data  // 显示列表
           })
     }
 
@@ -190,16 +167,8 @@ export default defineComponent({
     const setKvStatus = (index: any, row: any) => {
        console.log(row)
        api.um.kv_status(row)
-          .then((response:any) => {
-            const res = response.data;
-            state.tableData = res.data  // 显示列表
-            let msgType: any = res.code === 200? 'success' : 'error'
-            ElMessage({
-                showClose: true,
-                message: res.msg,
-                type: msgType,
-              })
-            console.log(res)
+          .then((res:any) => {
+            state.tableData = res.data.data  // 显示列表
           })
     }
 

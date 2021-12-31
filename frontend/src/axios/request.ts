@@ -1,5 +1,6 @@
 // request.ts
 import axios from "./index";
+import {toast} from "@/utils/toast";
 
 export class Request {
   /**
@@ -11,7 +12,12 @@ export class Request {
     return new Promise((resolve, reject) => {
       axios.get(url, { params: params })
       .then(res => {
-        resolve(res);
+        console.log(res)
+        if (res.data.code === 200) {
+          resolve(res);
+        } else {
+          toast.showError(res.data.msg)
+        }
       }).catch(err => {
         reject(err);
       })
@@ -27,7 +33,12 @@ export class Request {
     return new Promise((resolve, reject) => {
       axios.post(url, JSON.stringify(params))
       .then(res => {
-        resolve(res);
+        console.log(res)
+        if (res.data.code === 200) {
+          resolve(res);
+        } else {
+          toast.showError(res.data.msg)
+        }
       }).catch(err => {
         reject(err);
       })

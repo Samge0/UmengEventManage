@@ -69,7 +69,6 @@ import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {Socket} from "socket.io-client/build/esm/socket";
 import {api} from "@/axios/api";
-import {toast} from "@/utils/toast";
 
 let socketClient: Socket|any = null;
 let timer: Socket|any = null;
@@ -289,14 +288,8 @@ export default defineComponent({
      */
     const getConfig = () => {
       api.um.get_config()
-          .then((response:any) => {
-            const res = response.data;
-            if (res.code === 200) {
-              state.umConfig = res.data
-            } else {
-              toast.showError(res.msg)
-            }
-            console.log(res)
+          .then((res:any) => {
+            state.umConfig = res.data.data;
           })
     }
 

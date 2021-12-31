@@ -51,7 +51,6 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
-import {ElMessage} from "element-plus";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 
@@ -78,28 +77,17 @@ export default defineComponent({
     const addOrUpdateKv = () => {
       console.log(JSON.stringify(state.form))
       api.um.save_config(state.form)
-          .then((response:any) => {
-            const res = response.data;
-            let msgType: any = res.code === 200? 'success' : 'error'
-            ElMessage({
-                showClose: true,
-                message: res.msg,
-                type: msgType,
-              })
-            console.log(res)
+          .then((res:any) => {
+            if(res.data.data.code === 200){
+              toast.showSuccess(res.data.data.msg)
+            }
           })
     }
 
     const getConfig = () => {
       api.um.get_config()
-          .then((response:any) => {
-            const res = response.data;
-            if (res.code === 200) {
-              state.form = res.data
-            } else {
-              toast.showError(res.msg)
-            }
-            console.log(res)
+          .then((res:any) => {
+            state.form = res.data.data;
           })
     }
 
