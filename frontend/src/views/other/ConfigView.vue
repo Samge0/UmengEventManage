@@ -78,12 +78,11 @@ export default defineComponent({
       console.log(JSON.stringify(state.form))
       api.um.save_config(state.form)
           .then((res:any) => {
-            if(res.data.data.code === 200){
-              toast.showSuccess(res.data.data.msg)
-            }
+            toast.showSuccess(res.data.msg)
           })
     }
 
+    // 获取配置信息
     const getConfig = () => {
       api.um.get_config()
           .then((res:any) => {

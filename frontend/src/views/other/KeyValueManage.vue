@@ -130,10 +130,14 @@ export default defineComponent({
       console.log(JSON.stringify(state.form))
       api.um.add_kv(state.form)
           .then((res:any) => {
-            state.tableData = res.data.data  // 显示列表
+            state.tableData = res.data.data;
+            toast.showSuccess(res.data.msg)
           })
     }
 
+    /**
+     * 获取键值对信息
+     */
     const getKvs = () => {
       api.um.get_kvs()
           .then((res:any) => {
@@ -159,7 +163,8 @@ export default defineComponent({
        console.log(row)
        api.um.del_kv(row)
           .then((res:any) => {
-            state.tableData = res.data.data  // 显示列表
+            state.tableData = res.data.data;
+            toast.showSuccess(res.data.msg)
           })
     }
 
@@ -168,7 +173,8 @@ export default defineComponent({
        console.log(row)
        api.um.kv_status(row)
           .then((res:any) => {
-            state.tableData = res.data.data  // 显示列表
+            state.tableData = res.data.data;
+            toast.showSuccess(res.data.msg)
           })
     }
 

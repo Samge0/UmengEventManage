@@ -120,6 +120,7 @@ export default defineComponent({
       api.um.add_um_key(state.form)
           .then((res:any) => {
             state.tableData = res.data.data;
+            toast.showSuccess(res.data.msg)
           })
     }
 
@@ -148,6 +149,7 @@ export default defineComponent({
        api.um.del_um_key(row)
           .then((res:any) => {
             state.tableData = res.data.data;
+            toast.showSuccess(res.data.msg)
           })
     }
 
@@ -157,6 +159,7 @@ export default defineComponent({
       api.um.um_key_master(row)
           .then((res:any) => {
             state.tableData = res.data.data;
+            toast.showSuccess(res.data.msg)
           })
     }
 
