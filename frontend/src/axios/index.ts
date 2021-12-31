@@ -2,12 +2,10 @@
 import axios, { AxiosRequestConfig} from "axios";
 import {ElMessage} from "element-plus";
 import {Base} from "@/axios/base";
-// import router from "@/router";
-// import {useStore} from "vuex";
 
 /* 实例化axios请求配置 */
 const instance = axios.create({
-  // baseURL: Base.BASE_URL,
+  baseURL: Base.BASE_URL,
   timeout: 1000 * 30,
   headers: {
     "Content-Type": "application/json;charset=UTF-8",
