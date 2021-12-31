@@ -258,17 +258,9 @@ export default defineComponent({
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
-              ElMessage({
-                showClose: true,
-                message: 'getUmEvents Succeed.',
-                type: 'success',
-              })
-
-              // 显示列表
               state.tableData = res.data.lst
               state.total = res.data.total
               state.query.refresh = 0
-
             } else {
               ElMessage({
                 showClose: true,

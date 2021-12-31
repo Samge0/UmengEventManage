@@ -43,7 +43,7 @@ INSTALLED_APPS = [
 # 指定ASGI的路由地址 channels
 ASGI_APPLICATION = 'server.routing.app'
 
-# docker run -p 6379:6379 -d redis:5
+# docker run -d -p 6379:6379 --name redis5 redis:5
 # python3 -m pip install channels_redis
 CHANNEL_LAYERS = {
     'default': {

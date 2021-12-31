@@ -155,13 +155,6 @@ export default defineComponent({
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
-              ElMessage({
-                showClose: true,
-                message: 'getKvs Succeed.',
-                type: 'success',
-              })
-
-              // 显示列表
               state.tableData = res.data
             } else {
               ElMessage({

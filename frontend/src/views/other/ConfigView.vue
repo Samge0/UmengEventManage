@@ -94,15 +94,7 @@ export default defineComponent({
           .then((response:any) => {
             const res = response.data;
             if (res.code === 200) {
-              ElMessage({
-                showClose: true,
-                message: 'getConfig Succeed.',
-                type: 'success',
-              })
-
-              // 显示列表
               state.form = res.data
-
             } else {
               ElMessage({
                 showClose: true,
