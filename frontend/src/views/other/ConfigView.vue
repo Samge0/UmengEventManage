@@ -53,6 +53,7 @@
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {api} from "@/axios/api";
+import {toast} from "@/utils/toast";
 
 export default defineComponent({
   components: {
@@ -96,11 +97,7 @@ export default defineComponent({
             if (res.code === 200) {
               state.form = res.data
             } else {
-              ElMessage({
-                showClose: true,
-                message: 'getConfig Fail：' + res.msg,
-                type: 'error',
-              })
+              toast.showError(res.msg)
             }
             console.log(res)
           })

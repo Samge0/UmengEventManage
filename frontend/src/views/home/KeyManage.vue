@@ -91,6 +91,7 @@
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {api} from "@/axios/api";
+import {toast} from "@/utils/toast";
 export default defineComponent({
   created() {
     this.getUmKeys()
@@ -112,11 +113,7 @@ export default defineComponent({
     const addOrUpdateKey = () => {
       let reg = /^[A-Za-z0-9]+$/
       if(state.form.um_key.length != 24 || !reg.test(state.form.um_key)){
-        ElMessage({
-                showClose: true,
-                message: "请输入24位长度的友盟key（只能包含数字跟字母）",
-                type: 'error',
-              })
+        toast.showError("请输入24位长度的友盟key（只能包含数字跟字母）")
         return
       }
       state.dialogFormVisible = false
@@ -142,11 +139,7 @@ export default defineComponent({
             if (res.code === 200) {
               state.tableData = res.data
             } else {
-              ElMessage({
-                showClose: true,
-                message: 'getUmKeys Fail：' + res.msg,
-                type: 'error',
-              })
+              toast.showError(res.msg)
             }
             console.log(res)
           })

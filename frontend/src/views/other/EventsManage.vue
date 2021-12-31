@@ -175,6 +175,7 @@ import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {saveAs} from "file-saver";
 import {api} from "@/axios/api";
+import {toast} from "@/utils/toast";
 export default defineComponent({
   created() {
     this.setDefaultFilterFrom()
@@ -242,11 +243,7 @@ export default defineComponent({
                 getUmEvents()
               }
             } else {
-              ElMessage({
-                showClose: true,
-                message: 'getUmKeys Fail：' + res.msg,
-                type: 'error',
-              })
+               toast.showError(res.msg)
             }
             console.log(res)
           })
@@ -262,11 +259,7 @@ export default defineComponent({
               state.total = res.data.total
               state.query.refresh = 0
             } else {
-              ElMessage({
-                showClose: true,
-                message: 'getUmEvents Fail：' + res.msg,
-                type: 'error',
-              })
+              toast.showError(res.msg)
             }
             console.log(res)
           })
@@ -322,11 +315,7 @@ export default defineComponent({
               // 注意：这里要手动写上文件的后缀名
               saveAs(str, `友盟自定义事件_${state.query.um_key}.txt`);
             } else {
-              ElMessage({
-                showClose: true,
-                message: 'getUmEvents Fail：' + res.msg,
-                type: 'error',
-              })
+              toast.showError(res.msg)
             }
             console.log(res)
           })

@@ -97,6 +97,7 @@
 import { defineComponent, reactive, toRefs } from 'vue'
 import {ElMessage} from "element-plus";
 import {api} from "@/axios/api";
+import {toast} from "@/utils/toast";
 export default defineComponent({
   created() {
     this.getKvs()
@@ -119,19 +120,11 @@ export default defineComponent({
     const addOrUpdateKv = () => {
       let reg = /^[A-Za-z0-9_-]+$/
       if(state.form.kv_key.length <= 0 || !reg.test(state.form.kv_key)){
-        ElMessage({
-                showClose: true,
-                message: "kv_key不能为空 且 只能包含数字跟字母以及-_字符",
-                type: 'error',
-              })
+        toast.showError("kv_key不能为空 且 只能包含数字跟字母以及-_字符")
         return
       }
       if(state.form.kv_value.length <= 0){
-        ElMessage({
-                showClose: true,
-                message: "值不能为空",
-                type: 'error',
-              })
+        toast.showError("值不能为空")
         return
       }
       state.dialogFormVisible = false
@@ -157,11 +150,7 @@ export default defineComponent({
             if (res.code === 200) {
               state.tableData = res.data
             } else {
-              ElMessage({
-                showClose: true,
-                message: 'getKvs Fail：' + res.msg,
-                type: 'error',
-              })
+              toast.showError(res.msg)
             }
             console.log(res)
           })

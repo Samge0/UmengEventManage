@@ -2,6 +2,7 @@
 import axios, { AxiosRequestConfig} from "axios";
 import {ElMessage} from "element-plus";
 import {Base} from "@/axios/base";
+import {toast} from "@/utils/toast";
 
 /* 实例化axios请求配置 */
 const instance = axios.create({
@@ -111,11 +112,7 @@ instance.interceptors.response.use(function (config) {
  * @param msg
  */
 const showErrorMsg = (msg: string) => {
-    ElMessage({
-        showClose: true,
-        message: msg,
-        type: 'error',
-    })
+  toast.showError(msg)
 }
 
 /**
