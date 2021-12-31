@@ -560,6 +560,30 @@ def export_event(um_key: str, file_path: str = None):
         _print_tip(f'批量导出 自定义事件 失败：{um_key}')
 
 
+def check_um_status(um_key: str):
+    """
+    检查友盟连接状态
+    :param um_key: 友盟key
+    :return: True=有效，False=无效
+    """
+    url: str = urls.API_EVENT_LIST.format(BASE_URL=urls.BASE_URL, um_key=um_key)
+    data: dict = {
+        "relatedId": um_key,
+        "sortBy": "countToday",
+        "sortType": "desc",
+        "version": "",
+        "status": "normal",
+        "page": 1,
+        "pageSize": 1,
+        "dataSourceId": um_key
+    }
+    r = requests.post(url=url, headers=get_default_headers(), data=get_post_json(data))
+    if is_response_ok(r):
+        return True, '操作成功'
+    else:
+        return False, get_fail_msg(um_key=um_key, r=r)
+
+
 def get_fail_msg(um_key: str, r):
     """
     获取失败的提示信息
@@ -568,9 +592,9 @@ def get_fail_msg(um_key: str, r):
     :return:
     """
     try:
-        return f'{um_key} {get_eval_dict(r.text).get("msg")}'
+        return f'{get_eval_dict(r.text).get("msg")} {um_key}'
     except:
-        return f'{um_key}'
+        return f'操作失败 {um_key}'
 
 
 def cache_event_list(um_keys):

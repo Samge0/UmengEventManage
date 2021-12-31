@@ -30,42 +30,46 @@ def um_event(request):
     refresh: bool = post_body.get('refresh') == 1
     pg_index: str = post_body.get('pg_index') or 1
     pg_size: str = post_body.get('pg_size') or 20
-
     pg_start = (pg_index-1)*pg_size
     pg_end = pg_size*pg_index
-    if not um_key:
-        r = {
-            'code': 200,
-            'msg': '查询失败，要查询的key为空',
-            'data': list(UmKey.objects.filter().values())
-        }
-    else:
-        curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
 
-        results: list = get_events_from_db(um_key=um_key, curr_date=curr_date)
+    config_util.parse_config(None)
+
+    # 判断友盟key
+    check_result_response = check_um_key(um_key=um_key)
+    if check_result_response:
+        return check_result_response
+
+    # 判断友盟登录状态
+    if refresh:
+        check_result_response = check_um_status(um_key=um_key)
+        if check_result_response:
+            return check_result_response
+
+    curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+    results: list = get_events_from_db(um_key=um_key, curr_date=curr_date)
+    total: int = len(results)
+
+    if refresh or len(results) == 0:
+        results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
         total: int = len(results)
 
-        if refresh or len(results) == 0:
-            config_util.parse_config(None)
-            results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
-            total: int = len(results)
+        # 将新结果插入数据库
+        insert_event(results=results)
 
-            # 将新结果插入数据库
-            insert_event(results=results)
+        # 重新查询数据库
+        results: list = get_events_from_db(um_key=um_key, curr_date=curr_date)
+    else:
+        print('数据库已有数据，直接读取数据库的数据')
 
-            # 重新查询数据库
-            results: list = get_events_from_db(um_key=um_key, curr_date=curr_date)
-        else:
-            print('数据库已有数据，直接读取数据库的数据')
-
-        r = {
-            'code': 200,
-            'msg': '查询成功',
-            'data': {
-                'lst': results[pg_start:pg_end],
-                'total': total
-            }
+    r = {
+        'code': 200,
+        'msg': '查询成功',
+        'data': {
+            'lst': results[pg_start:pg_end],
+            'total': total
         }
+    }
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
 
 
@@ -132,26 +136,31 @@ def um_event_export(request):
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
     refresh: bool = post_body.get('refresh') == 1
-    if not um_key:
-        r = {
-            'code': 200,
-            'msg': '导出失败，要查询的key为空',
-            'data': list(UmKey.objects.filter().values())
-        }
-    else:
-        config_util.parse_config(None)
-        results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
-        txt: str = None
-        for item in results:
-            if txt:
-                txt = f"{txt}\n{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
-            else:
-                txt = f"{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
-        r = {
-            'code': 200,
-            'msg': '查询成功',
-            'data': txt
-        }
+
+    config_util.parse_config(None)
+
+    # 判断友盟key
+    check_result_response = check_um_key(um_key=um_key)
+    if check_result_response:
+        return check_result_response
+
+    # 判断友盟登录状态
+    check_result_response = check_um_status(um_key=um_key)
+    if check_result_response:
+        return check_result_response
+
+    results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
+    txt: str = None
+    for item in results:
+        if txt:
+            txt = f"{txt}\n{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
+        else:
+            txt = f"{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
+    r = {
+        'code': 200,
+        'msg': '查询成功',
+        'data': txt
+    }
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
 
 
@@ -163,6 +172,17 @@ def um_event_import(request):
     :return:
     """
     um_key: str = ''.join(request.POST.values()) if request.POST else ""
+    
+    # 判断友盟key
+    check_result_response = check_um_key(um_key=um_key)
+    if check_result_response:
+        return check_result_response
+
+    # 判断友盟登录状态
+    check_result_response = check_um_status(um_key=um_key)
+    if check_result_response:
+        return check_result_response
+
     code, msg = handle_uploaded_file(um_key=um_key, f=request.FILES['file'])
     r = {
         'code': code,
@@ -244,3 +264,38 @@ def handle_update_file(um_key: str, f):
         code, msg = -1, "上传失败，请稍候重试"
 
     return code, msg
+
+
+def check_um_status(um_key: str) -> HttpResponse:
+    """
+    检查友盟连接状态，
+    :param um_key:
+    :return: None=状态正常，HttpResponse=状态异常，直接返回该response
+    """
+    status, msg = um_util.check_um_status(um_key=um_key)
+    if status:
+        return None
+    else:
+        r = {
+            'code': 403,
+            'msg': msg or '操作失败',
+            'data': None
+        }
+        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+
+
+def check_um_key(um_key: str) -> HttpResponse:
+    """
+    检查友盟key值，
+    :param um_key:
+    :return: None=状态正常，HttpResponse=状态异常，直接返回该response
+    """
+    if um_key:
+        return None
+    else:
+        r = {
+            'code': 200,
+            'msg': '友盟key不能为空',
+            'data': None
+        }
+        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
