@@ -7,6 +7,7 @@ import json
 import os
 import time
 
+from django.db.models import Q
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
@@ -30,6 +31,7 @@ def um_event(request):
     refresh: bool = post_body.get('refresh') == 1
     pg_index: str = post_body.get('pg_index') or 1
     pg_size: str = post_body.get('pg_size') or 20
+    filter_dict: dict = post_body.get('filter') or None
     pg_start = (pg_index-1)*pg_size
     pg_end = pg_size*pg_index
 
@@ -47,7 +49,7 @@ def um_event(request):
             return check_result_response
 
     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    results: list = get_events_from_db(um_key=um_key, curr_date=curr_date)
+    results: list = get_events_from_db(um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     total: int = len(results)
 
     if refresh or len(results) == 0:
@@ -58,7 +60,7 @@ def um_event(request):
         insert_event(results=results)
 
         # 重新查询数据库
-        results: list = get_events_from_db(um_key=um_key, curr_date=curr_date)
+        results: list = get_events_from_db(um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     else:
         print('数据库已有数据，直接读取数据库的数据')
 
@@ -118,12 +120,62 @@ def insert_event(results: list):
     print('入库完成')
 
 
-def get_events_from_db(um_key: str, curr_date: str):
+def get_events_from_db(um_key: str, curr_date: str, filter_dict: dict):
     """
     从数据库中获取某一天的友盟自定义事件列表
+
+    字段说明：https://www.cnblogs.com/ls1997/p/10955402.html
+    _gt 大于>
+    __gte 大于等于>=
+    __lt 小于<
+    __lte 小于等于<=
+    __exact 精确等于 like 'aaa'
+    __iexact 精确等于 忽略大小写 ilike 'aaa'
+    __contains 包含 like '%aaa%'
+    __icontains 包含,忽略大小写 ilike '%aaa%'，但是对于sqlite来说，contains的作用效果等同于icontains。
+    __in Student.objects.filter(age__in=[10, 20, 30])
+    __isnull 判空
+    __startswith 以…开头
+    __istartswith 以…开头 忽略大小写
+    __endswith 以…结尾
+    __iendswith 以…结尾，忽略大小写
+    __range 在…范围内
+    __year 日期字段的年份
+    __month 日期字段的月份
+    __day 日期字段的日
     :return:
     """
-    return list(UmEventModel.objects.filter(um_key=um_key, um_date=curr_date).values()) or []
+    order_by: str = None
+    _filter: Q = Q(um_key=um_key) & Q(um_date=curr_date)
+    if filter_dict:
+        print(f"存在筛选条件，进行筛选查询：{filter_dict}")
+
+        # 关键词
+        keyword: str = filter_dict.get('keyword')
+        if keyword:
+            _filter = _filter & (Q(um_name__contains=keyword) | Q(um_displayName__contains=keyword))
+
+        # 状态
+        state: str = filter_dict.get('state')
+        if state:
+            _filter = _filter & Q(um_status=state)
+
+        # 类型
+        _type: str = filter_dict.get('type')
+        if _type:
+            _filter = _filter & Q(um_eventType=int(_type))
+
+        # 排序方式
+        order_by: str = filter_dict.get('order_by')
+        if 'desc' == filter_dict.get('order'):
+            order_by = f'-{order_by}'
+
+    if order_by:
+        obj = UmEventModel.objects.filter(_filter).order_by(order_by)
+    else:
+        obj = UmEventModel.objects.filter(_filter)
+
+    return list(obj.values() or [])
 
 
 @require_http_methods(["POST"])

@@ -59,17 +59,17 @@
 
 <!--      分页 background-->
      <el-pagination
-                    layout="sizes, prev, pager, next, jumper"
-                    :current-page="query.pg_index"
-                    :page-size="query.pg_size"
-                    :page-sizes="[15, 30, 50, 120, 200, 300, 400, 500, 600, 700, 800]"
-                    :total="total"
-                    prev-text="上一页"
-                    next-text="下一页"
-                    @current-change="onCurrentPageChange"
-                    @size-change="onPageSizeChange"
-                    v-show="tableData.length > 0"
-                    style="margin: 30px"
+        layout="sizes, prev, pager, next, jumper"
+        :current-page="query.pg_index"
+        :page-size="query.pg_size"
+        :page-sizes="[15, 30, 50, 120, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000]"
+        :total="total"
+        prev-text="上一页"
+        next-text="下一页"
+        @current-change="onCurrentPageChange"
+        @size-change="onPageSizeChange"
+        v-show="tableData.length > 0"
+        style="margin: 30px"
      >
      </el-pagination>
 
@@ -83,7 +83,6 @@
           <el-upload
               ref="upload"
               :action="uploadUrl"
-              :on-preview="handlePreview"
               :on-success="handleUploadSucceed"
               :file-list="fileList"
               :show-file-list="false"
@@ -139,19 +138,19 @@
 
           <el-form-item label="排序字段">
             <el-col>
-              <el-select v-model="filterForm.sort_by" placeholder="请选择排序字段">
-                <el-option label="事件id" value="name"></el-option>
-                <el-option label="事件名称" value="displayName"></el-option>
-                <el-option label="昨日消息数" value="countYesterday"></el-option>
-                <el-option label="今日消息数" value="countToday"></el-option>
-                <el-option label="昨日设备数" value="deviceYesterday"></el-option>
+              <el-select v-model="filterForm.order_by" placeholder="请选择排序字段">
+                <el-option label="事件id" value="um_name"></el-option>
+                <el-option label="事件名称" value="um_displayName"></el-option>
+                <el-option label="昨日消息数" value="um_countYesterday"></el-option>
+                <el-option label="今日消息数" value="um_countToday"></el-option>
+                <el-option label="昨日独立用户数" value="um_deviceYesterday"></el-option>
               </el-select>
             </el-col>
           </el-form-item>
 
           <el-form-item label="排序方式">
             <el-col>
-              <el-select v-model="filterForm.sort" placeholder="请选择排序方式">
+              <el-select v-model="filterForm.order" placeholder="请选择排序方式">
                 <el-option label="降序" value="desc"></el-option>
                 <el-option label="升序" value="asc"></el-option>
               </el-select>
@@ -196,7 +195,19 @@ export default defineComponent({
 
       loading: true,
 
-      tableData: [],
+      tableData: [
+        {
+          um_key: '',
+          um_eventId: '',
+          um_name: '',
+          um_displayName: '',
+          um_status: '',
+          um_eventType: 0, //（multiattribute=0 ;  calculation=1）
+          um_countToday: 0,
+          um_countYesterday: 0,
+          um_deviceYesterday: 0,
+        }
+      ],
       dialogFormVisible: false,
       form: {
         um_key: '',
@@ -204,8 +215,7 @@ export default defineComponent({
         um_name: '',
         um_displayName: '',
         um_status: '',
-        um_eventType: '',
-        um_eventType_int: 0, //（multiattribute=0 ;  calculation=1）
+        um_eventType: 0, //（multiattribute=0 ;  calculation=1）
         um_countToday: 0,
         um_countYesterday: 0,
         um_deviceYesterday: 0,
@@ -215,6 +225,7 @@ export default defineComponent({
         refresh: 0,
         pg_index: 1,
         pg_size: 15,
+        filter: {},
       },
       total: 50,
       formLabelWidth: '120px',
@@ -225,9 +236,9 @@ export default defineComponent({
     const setDefaultFilterFrom =()=>{
       state.filterForm = {
         keyword: '',
-        sort_by: 'deviceYesterday',
-        sort: 'desc',
-        state: '',
+        order_by: 'um_deviceYesterday',
+        order: 'desc',
+        state: 'normal',
         type: '1',
       }
     }
@@ -268,7 +279,6 @@ export default defineComponent({
         um_displayName: row.um_displayName,
         um_status: row.um_status,
         um_eventType: row.um_eventType,
-        um_eventType_int: row.um_eventType_int,
         um_countToday: row.um_countToday,
         um_countYesterday: row.um_countYesterday,
         um_deviceYesterday: row.um_deviceYesterday,
@@ -292,18 +302,28 @@ export default defineComponent({
       console.log("添加或更新单条事件")
     }
 
-    // 导导入自定义事件
-    const importEvents = () => {
-      console.log("导导入自定义事件")
-    }
-
-    // 导出所有自定义事件
+    // 导出当前筛选的自定义事件
     const exportEvents = () => {
+
+      /*
+      // 导出所有事件
       api.um.um_event_export(state.query)
           .then((res:any) => {
-            let str = new Blob([res.data.data], {type: 'text/plain;charset=utf-8'});
-            saveAs(str, `友盟自定义事件_${state.query.um_key}.txt`);
-          })
+            let blobTxt = new Blob([res.data.data], {type: 'text/plain;charset=utf-8'});
+            saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
+          })*/
+
+      // 导出当前筛选条件查询到的事件列表
+      let txt: string = '';
+      for(let item of state.tableData){
+        if(txt.length > 0){
+            txt = `${txt}\n${item.um_name},${item.um_displayName},${item.um_eventType}`
+        }else{
+          txt = `${item.um_name},${item.um_displayName},${item.um_eventType}`
+        }
+      }
+      let blobTxt = new Blob([txt], {type: 'text/plain;charset=utf-8'});
+      saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
     }
 
     // 分页当前页改变的监听
@@ -321,12 +341,7 @@ export default defineComponent({
       getUmEvents()
     }
 
-    // 文件上传预备
-    const handlePreview = (file: any) => {
-      console.log(`handlePreview ${file}`)
-    }
-
-    // 文件上传成
+    // 文件上传成功
     const handleUploadSucceed = (response: any, file: any, file_list: any) => {
       state.dialogFormVisible = false
       console.log(`handleUploadSucceed ${response }${file} ${file_list}`)
@@ -355,6 +370,8 @@ export default defineComponent({
       console.log(`onFilterSubmit ${state.filterForm}`)
       console.log(state.filterForm)
       state.showDrawer = false
+      state.query.filter = state.filterForm
+      getUmEvents()
     }
 
     return {
@@ -369,9 +386,7 @@ export default defineComponent({
       onCurrentPageChange,
       onPageSizeChange,
       exportEvents,
-      importEvents,
 
-      handlePreview,
       handleUploadSucceed,
 
       onUmKeyChange,
