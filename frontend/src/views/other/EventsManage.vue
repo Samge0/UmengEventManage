@@ -44,6 +44,7 @@
 
 <!--      表格-->
       <el-table
+          v-loading="loading"
           :data="tableData"
           v-show="tableData.length > 0"
       >
@@ -193,6 +194,8 @@ export default defineComponent({
 
       uploadUrl:api.um.um_event_import,
 
+      loading: true,
+
       tableData: [],
       dialogFormVisible: false,
       form: {
@@ -243,11 +246,15 @@ export default defineComponent({
 
     // 获取事件列表
     const getUmEvents = () => {
+      state.loading = true
       api.um.um_event(state.query)
           .then((res:any) => {
             state.tableData = res.data.data.lst
             state.total = res.data.data.total
             state.query.refresh = 0
+            state.loading = false
+          }).catch(() => {
+            state.loading = false
           })
     }
 
