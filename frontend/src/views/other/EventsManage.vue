@@ -159,6 +159,33 @@
             </el-col>
           </el-form-item>
 
+          <el-form-item label="昨日数量">
+            <el-col>
+              <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.yesterday_min" label="昨日数量" placeholder="最小值"/> ~
+              <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.yesterday_max" placeholder="最大值"/>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item label="今日数量">
+            <el-col>
+              <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.today_min" label="昨日数量" placeholder="最小值"/> ~
+              <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.today_max" placeholder="最大值"/>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item label="用户数量">
+            <el-col>
+              <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.device_min" label="昨日数量" placeholder="最小值"/> ~
+              <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.device_max" placeholder="最大值"/>
+            </el-col>
+          </el-form-item>
+
+          <el-form-item label="数量筛选">
+            <el-col>
+              <el-button @click="queryAllZeroEvent" size="mini">查询所有数量为 0 的事件</el-button>
+            </el-col>
+          </el-form-item>
+
           <el-form-item>
             <el-button class="el-button-filter" @click="onFilterReset">重置</el-button>
             <el-button class="el-button-filter" type="primary" @click="onFilterSubmit">提交</el-button>
@@ -187,18 +214,25 @@ export default defineComponent({
     this.onFilterReset()
     this.getUmKeys()
   },
-  setup() {
+  setup: function () {
     const state = reactive({
 
-      filterForm: {},
+      filterForm: {
+        keyword: '',
+        order_by: 'um_deviceYesterday',
+        order: 'desc',
+        state: 'normal',
+        type: '1',
+        count_limit: {}
+      },
 
       showDrawer: false,
 
-      umKeys:[],
+      umKeys: [],
 
-      fileList:[],
+      fileList: [],
 
-      uploadUrl:api.um.um_event_import,
+      uploadUrl: api.um.um_event_import,
 
       loading: true,
 
@@ -243,8 +277,8 @@ export default defineComponent({
     // 获取友盟key列表
     const getUmKeys = () => {
       api.um.get_um_keys()
-          .then((res:any) => {
-            if(res.data.data.length > 0){
+          .then((res: any) => {
+            if (res.data.data.length > 0) {
               state.umKeys = res.data.data
               state.query.um_key = res.data.data[0].um_key
               getUmEvents()
@@ -256,14 +290,14 @@ export default defineComponent({
     const getUmEvents = () => {
       state.loading = true
       api.um.um_event(state.query)
-          .then((res:any) => {
+          .then((res: any) => {
             state.tableData = res.data.data.lst
             state.total = res.data.data.total
             state.query.refresh = 0
             state.loading = false
           }).catch(() => {
-            state.loading = false
-          })
+        state.loading = false
+      })
     }
 
     // 编辑
@@ -291,7 +325,7 @@ export default defineComponent({
         'op_type': op_type,
         'ids': state.ids
       }
-       api.um.um_event_op(body)
+      api.um.um_event_op(body)
           .then(() => {
             getUmEvents()
           })
@@ -315,10 +349,10 @@ export default defineComponent({
 
       // 导出当前筛选条件查询到的事件列表
       let txt: string = '';
-      for(let item of state.tableData){
-        if(txt.length > 0){
-            txt = `${txt}\n${item.um_name},${item.um_displayName},${item.um_eventType}`
-        }else{
+      for (let item of state.tableData) {
+        if (txt.length > 0) {
+          txt = `${txt}\n${item.um_name},${item.um_displayName},${item.um_eventType}`
+        } else {
           txt = `${item.um_name},${item.um_displayName},${item.um_eventType}`
         }
       }
@@ -345,7 +379,7 @@ export default defineComponent({
     const handleSelectionChange = (lst: any[]) => {
       console.log(lst)
       state.ids = []
-      for(let item of lst){
+      for (let item of lst) {
         state.ids.push(item.um_eventId)
       }
       console.log(state.ids)
@@ -354,7 +388,7 @@ export default defineComponent({
     // 文件上传成功
     const handleUploadSucceed = (response: any, file: any, file_list: any) => {
       state.dialogFormVisible = false
-      console.log(`handleUploadSucceed ${response }${file} ${file_list}`)
+      console.log(`handleUploadSucceed ${response}${file} ${file_list}`)
       toast.showSuccess('上传成功')
     }
 
@@ -374,7 +408,28 @@ export default defineComponent({
         order: 'desc',
         state: 'normal',
         type: '1',
+        count_limit: {
+          yesterday_min: undefined,
+          yesterday_max: undefined,
+          today_min: undefined,
+          today_max: undefined,
+          device_min: undefined,
+          device_max: undefined,
+        },
       }
+    }
+
+    // 查询所有为0的事件
+    const queryAllZeroEvent = () => {
+      state.filterForm.count_limit = {
+          yesterday_min: 0,
+          yesterday_max: 0,
+          today_min: 0,
+          today_max: 0,
+          device_min: 0,
+          device_max: 0,
+      }
+      onFilterSubmit()
     }
 
     // 筛选view关闭（提交）监听
@@ -406,6 +461,8 @@ export default defineComponent({
 
       onFilterSubmit,
       onFilterReset,
+
+      queryAllZeroEvent,
     }
   },
 })
@@ -448,6 +505,10 @@ export default defineComponent({
 .el-button-filter{
   width: 150px;
   margin-top: 40px;
+}
+
+.el-input-filter{
+  width: 130px;
 }
 
 .el-divider{

@@ -211,6 +211,30 @@ def get_events_from_db(um_key: str, curr_date: str, filter_dict: dict):
         if _type:
             _filter = _filter & Q(um_eventType=int(_type))
 
+        # 数量限制
+        count_limit: dict = filter_dict.get('count_limit') or None
+        if count_limit:
+            # 处理昨日消息数筛选
+            yesterday_min, yesterday_max = get_min_max(count_limit, 'yesterday_min', 'yesterday_max')
+            if yesterday_min == 0 and yesterday_max == 0:
+                _filter = _filter & Q(um_countYesterday=0)
+            elif yesterday_max > 0:
+                _filter = _filter & Q(um_countYesterday__gte=yesterday_min) & Q(um_countYesterday__lte=yesterday_max)
+
+            # 处理今日消息数筛选
+            today_min, today_max = get_min_max(count_limit, 'today_min', 'today_max')
+            if today_min == 0 and today_max == 0:
+                _filter = _filter & Q(um_countToday=0)
+            elif today_max > 0:
+                _filter = _filter & Q(um_countToday__gte=today_min) & Q(um_countToday__lte=today_max)
+
+            # 处理设备消息数筛选
+            device_min, device_max = get_min_max(count_limit, 'device_min', 'device_max')
+            if device_min == 0 and device_max == 0:
+                _filter = _filter & Q(um_deviceYesterday=0)
+            elif device_max > 0:
+                _filter = _filter & Q(um_deviceYesterday__gte=device_min) & Q(um_deviceYesterday__lte=device_max)
+
         # 排序方式
         order_by: str = filter_dict.get('order_by')
         if 'desc' == filter_dict.get('order'):
@@ -222,6 +246,20 @@ def get_events_from_db(um_key: str, curr_date: str, filter_dict: dict):
         obj = UmEventModel.objects.filter(_filter)
 
     return list(obj.values() or [])
+
+
+def get_min_max(count_limit, key_min, key_max):
+    """
+    获取最大最小值
+    :param count_limit:
+    :param key_min:
+    :param key_max:
+    :return:
+    """
+    _max: int = count_limit.get(key_min) if count_limit.get(key_min) is not None else -1
+    _min: int = count_limit.get(key_max) if count_limit.get(key_max) is not None else -1
+    _min: int = _max if _min > _max else _min
+    return _min, _max
 
 
 @require_http_methods(["POST"])
