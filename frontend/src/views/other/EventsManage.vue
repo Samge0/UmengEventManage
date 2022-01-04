@@ -30,7 +30,8 @@
             </el-select>
 
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="doStop">批量暂停</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOp(0)">批量暂停</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOp(1)">批量恢复</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="dialogFormVisible = true;">上传事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportEvents">导出事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-sort" @click="showDrawer = true;">事件筛选</el-button>
@@ -46,6 +47,7 @@
       <el-table
           v-loading="loading"
           :data="tableData"
+          @selection-change="handleSelectionChange"
           v-show="tableData.length > 0"
       >
         <el-table-column type="selection"/>
@@ -116,7 +118,7 @@
             <el-input v-model="filterForm.keyword"></el-input>
           </el-form-item>
 
-          <el-form-item label="事件状态" >
+          <el-form-item label="事件状态">
             <el-col>
               <el-select v-model="filterForm.state" placeholder="请选择事件状态">
                 <el-option label="不限状态" value=""></el-option>
@@ -175,9 +177,14 @@ import { defineComponent, reactive, toRefs } from 'vue'
 import {saveAs} from "file-saver";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
+
+// interface UmEventBean{
+//   um_eventId: string
+// }
+
 export default defineComponent({
   created() {
-    this.setDefaultFilterFrom()
+    this.onFilterReset()
     this.getUmKeys()
   },
   setup() {
@@ -230,18 +237,8 @@ export default defineComponent({
       total: 50,
       formLabelWidth: '120px',
       dialogCommitTitle: '添加',
+      ids: [''],
     })
-
-    // 设置默认的筛选view
-    const setDefaultFilterFrom =()=>{
-      state.filterForm = {
-        keyword: '',
-        order_by: 'um_deviceYesterday',
-        order: 'desc',
-        state: 'normal',
-        type: '1',
-      }
-    }
 
     // 获取友盟key列表
     const getUmKeys = () => {
@@ -287,14 +284,17 @@ export default defineComponent({
       state.dialogCommitTitle = "更新"
     }
 
-    // 删除
-    const deleteHost = (index: any, row: any) => {
-      console.log(index, row)
-    }
-
-    // 批量暂停
-    const doStop = () => {
-      console.log("批量暂停")
+    // 批量暂停/ 批量恢复
+    const parseEventOp = (op_type: number) => {
+      let body = {
+        'um_key': state.query.um_key,
+        'op_type': op_type,
+        'ids': state.ids
+      }
+       api.um.um_event_op(body)
+          .then(() => {
+            getUmEvents()
+          })
     }
 
     // 添加或更新单条事件
@@ -341,6 +341,16 @@ export default defineComponent({
       getUmEvents()
     }
 
+    // 表格选中行监听
+    const handleSelectionChange = (lst: any[]) => {
+      console.log(lst)
+      state.ids = []
+      for(let item of lst){
+        state.ids.push(item.um_eventId)
+      }
+      console.log(state.ids)
+    }
+
     // 文件上传成功
     const handleUploadSucceed = (response: any, file: any, file_list: any) => {
       state.dialogFormVisible = false
@@ -358,7 +368,13 @@ export default defineComponent({
     // 筛选view重置监听
     const onFilterReset = () => {
       console.log(`onFilterReset`)
-      setDefaultFilterFrom()
+      state.filterForm = {
+        keyword: '',
+        order_by: 'um_deviceYesterday',
+        order: 'desc',
+        state: 'normal',
+        type: '1',
+      }
     }
 
     // 筛选view关闭（提交）监听
@@ -376,12 +392,13 @@ export default defineComponent({
       getUmEvents,
 
       editHost,
-      deleteHost,
-      doStop,
+      parseEventOp,
       addOrUpdateEvent,
       onCurrentPageChange,
       onPageSizeChange,
       exportEvents,
+
+      handleSelectionChange,
 
       handleUploadSucceed,
 
@@ -389,7 +406,6 @@ export default defineComponent({
 
       onFilterSubmit,
       onFilterReset,
-      setDefaultFilterFrom,
     }
   },
 })

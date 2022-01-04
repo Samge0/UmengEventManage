@@ -27,4 +27,5 @@ urlpatterns = [
     url(r'um_event_export$', um_event_export),
     url(r'um_event_import$', um_event_import),
     url(r'um_event_update$', um_event_update),
+    url(r'um_event_op$', um_event_op),
 ]

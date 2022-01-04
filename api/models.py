@@ -46,7 +46,7 @@ class UmEventModel(models.Model):
     um_eventId = models.CharField(max_length=128)
     um_name = models.CharField(max_length=128, default="")
     um_displayName = models.CharField(max_length=128)
-    um_status = models.CharField(max_length=10)  # 状态：normal=正常；pause=暂停
+    um_status = models.CharField(max_length=10)  # 状态：normal=正常；stopped=暂停
     um_eventType = models.IntegerField(default=0)         # 类型（multiattribute=0 ;  calculation=1）
     um_countToday = models.IntegerField(default=0)
     um_countYesterday = models.IntegerField(default=0)

@@ -34,6 +34,8 @@ class api {
     um_event: (params?: any) => Request.post('/api/um_event', params),
     // 友盟事件管理-导出事件到txt
     um_event_export: (params?: any) => Request.post('/api/um_event_export', params),
+    // 友盟事件管理-批量暂停/批量恢复
+    um_event_op: (params?: any) => Request.post('/api/um_event_op', params),
     // 友盟事件管理-批量导入事件
     um_event_import: `${Base.BASE_URL}/api/um_event_import`,
     // 友盟事件管理-批量导入&更新事件，如果事件已存在，会自动更新事件显示名

@@ -19,6 +19,64 @@ from .um import um_tasks, um_util
 CONTENT_TYPE_JSON = "application/json,charset=utf-8"
 
 
+def get_event_md5(um_eventId: str, curr_date: str):
+    """
+    获取友盟自定义事件的md5值
+        根据 事件id && 当前日期 生成md5值
+    :param um_eventId:
+    :param curr_date:
+    :return:
+    """
+    md5_value: str = f"{um_eventId}{curr_date}"
+    return hashlib.md5(md5_value.encode(encoding='utf-8')).hexdigest()
+
+
+@require_http_methods(["POST"])
+def um_event_op(request):
+    """
+    暂停友盟自定义事件
+    op_type : 0=暂停，1=恢复
+    :param request:
+    :return:
+    """
+    post_body = json.loads(request.body)
+    um_key: str = post_body.get('um_key')
+    op_type: int = post_body.get('op_type') or 0
+    ids: list = post_body.get('ids') or []
+
+    config_util.parse_config(None)
+
+    # 判断友盟key
+    check_result_response = check_um_key(um_key=um_key)
+    if check_result_response:
+        return check_result_response
+
+    # 判断友盟登录状态
+    check_result_response = check_um_status(um_key=um_key)
+    if check_result_response:
+        return check_result_response
+
+    # 批量暂停/恢复友盟统计事件
+    _filter: Q = None
+    for _id in ids:
+        if not _filter:
+            _filter = Q(um_eventId=_id)
+        else:
+            _filter = _filter | Q(um_eventId=_id)
+    if op_type == 0:
+        um_util.event_pause(um_key=um_key, ids=ids)
+        UmEventModel.objects.filter(_filter).update(um_status='stopped')
+    else:
+        um_util.event_restore(um_key=um_key, ids=ids)
+        UmEventModel.objects.filter(_filter).update(um_status='normal')
+    r = {
+        'code': 200,
+        'msg': '操作成功',
+        'data': None
+    }
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+
+
 @require_http_methods(["POST"])
 def um_event(request):
     """
@@ -73,18 +131,6 @@ def um_event(request):
         }
     }
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
-
-
-def get_event_md5(um_eventId: str, curr_date: str):
-    """
-    获取友盟自定义事件的md5值
-        根据 事件id && 当前日期 生成md5值
-    :param um_eventId:
-    :param curr_date:
-    :return:
-    """
-    md5_value: str = f"{um_eventId}{curr_date}"
-    return hashlib.md5(md5_value.encode(encoding='utf-8')).hexdigest()
 
 
 def insert_event(results: list):
