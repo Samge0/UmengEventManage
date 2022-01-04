@@ -172,9 +172,9 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
-import {ElMessage} from "element-plus";
 import {saveAs} from "file-saver";
 import {api} from "@/axios/api";
+import {toast} from "@/utils/toast";
 export default defineComponent({
   created() {
     this.setDefaultFilterFrom()
@@ -345,11 +345,7 @@ export default defineComponent({
     const handleUploadSucceed = (response: any, file: any, file_list: any) => {
       state.dialogFormVisible = false
       console.log(`handleUploadSucceed ${response }${file} ${file_list}`)
-      ElMessage({
-                showClose: true,
-                message: '上传成功',
-                type: 'success',
-              })
+      toast.showSuccess('上传成功')
     }
 
     // 友盟key选中状态监听

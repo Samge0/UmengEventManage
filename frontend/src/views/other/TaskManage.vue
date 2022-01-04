@@ -66,9 +66,9 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
-import {ElMessage} from "element-plus";
 import {Socket} from "socket.io-client/build/esm/socket";
 import {api} from "@/axios/api";
+import {toast} from "@/utils/toast";
 
 let socketClient: Socket|any = null;
 let timer: Socket|any = null;
@@ -297,11 +297,7 @@ export default defineComponent({
     const handleUploadSucceed = (response: any, file: any, file_list: any) => {
       state.dialogFormVisible = false
       console.log(`handleUploadSucceed ${response }${file} ${file_list}`)
-      ElMessage({
-                showClose: true,
-                message: '上传成功，开始同步更新友盟事件',
-                type: 'success',
-              })
+      toast.showSuccess('上传成功，开始同步更新友盟事件')
       startUpdateTask()
     }
 
