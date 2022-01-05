@@ -12,7 +12,7 @@
           text-color="#ffffff"
           active-text-color="#409EFF"
           background-color="#00000000"
-          router="true"
+          :router="true"
           :default-active="currPath"
           @select = "selectMenu"
       >
@@ -30,13 +30,16 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
 export default defineComponent({
+
   created() {
-    // 刷新页面时恢复到当前tab页
-    if(window.location.href.concat("#")){
-      this.currPath = window.location.href.split("#")[1]
-    }
-    console.log(`this.currPath = ${this.currPath}`)
+    this.fetchData()
   },
+
+  watch:{
+      // 监听路由变化
+      '$route':'fetchData'
+  },
+
   setup() {
     const state = reactive({
       currPath: "/home",
@@ -76,14 +79,29 @@ export default defineComponent({
       ],
     })
 
+    /**
+     * 菜单切换
+     */
     const selectMenu = (index: any, indexPath: any) => {
         state.currPath = indexPath
         console.log(`index=${index}     indexPath=${indexPath}`)
     }
 
+    /**
+     * 监听路由变化，及时刷新页面并切换到指定tab页
+     */
+    const fetchData = () =>{
+        console.log('fetchData 路由发生变化');
+        if(window.location.href.concat("#")){
+          state.currPath = window.location.href.split("#")[1]
+        }
+        console.log(`state.currPath = ${state.currPath}`)
+     }
+
     return {
       ...toRefs(state),
       selectMenu,
+      fetchData,
     }
   },
 })
