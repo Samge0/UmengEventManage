@@ -213,19 +213,26 @@ def get_all_events_with_analysis(um_key: str):
     return temp_list
 
 
-def query_app_list() -> (list, str):
+def query_app_list() -> (list, str, int):
     """
     获取友盟应用列表
-    :return: lst, msg
+    :return: lst, msg, code
     """
     r = requests.get(url=urls.API_APP_LIST.format(BASE_URL=urls.BASE_URL), headers=get_default_headers())
+    # 是否友盟的示例列表，因为没有登录的情况下，友盟会返回自己的示例列表，如果是这种情况，则返回空数组
+    is_demo_data: bool = '5f6960d2b473963242a3b459' in r.text \
+                         or '5b8cf21af43e481aea000022' in r.text \
+                         or '5f6d566180455950e496e0e7' in r.text \
+                         or '5f69610ba4ae0a7f7d09d36d' in r.text
     if is_response_ok(r):
+        if is_demo_data:
+            return [], '请先登录友盟账号并更新cookie的配置信息', 403
         _print_tip(f'获取友盟应用列表 成功：\n{r.text[:200]}...')
-        return get_eval_dict(r.text).get('data'), '获取成功'
+        return get_eval_dict(r.text).get('data'), '获取成功', 200
     else:
         msg: str = get_fail_msg(um_key="", r=r)
         _print_tip(f'获取友盟应用列表 失败：{msg}')
-        return [], msg
+        return [], msg, 400
 
 
 def query_event_list(um_key: str):

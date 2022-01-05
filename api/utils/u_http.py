@@ -25,7 +25,7 @@ def check_um_status(um_key: str) -> HttpResponse:
             'msg': msg or '操作失败',
             'data': None
         }
-        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
 
 
 def check_um_key(um_key: str) -> HttpResponse:
@@ -42,4 +42,4 @@ def check_um_key(um_key: str) -> HttpResponse:
             'msg': '友盟key不能为空',
             'data': None
         }
-        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)

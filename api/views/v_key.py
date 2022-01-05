@@ -22,9 +22,9 @@ def index(request):
 @require_http_methods(["GET"])
 def get_um_apps(request):
     u_config.parse_config(None)
-    lst, msg = um_util.query_app_list()
+    lst, msg, code = um_util.query_app_list()
     r = {
-        'code': 200,
+        'code': code,
         'msg': msg,
         'data': list(lst)
     }
