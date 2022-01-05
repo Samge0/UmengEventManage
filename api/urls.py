@@ -10,6 +10,7 @@ from .views_event import *
 
 # http路由
 urlpatterns = [
+    url(r'get_um_apps$', get_um_apps),
     url(r'get_um_keys$', get_um_keys),
     url(r'add_um_key$', add_um_key),
     url(r'del_um_key$', del_um_key),

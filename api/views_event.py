@@ -11,12 +11,10 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from . import config_util
+from . import config_util, http_util
 from .json_encoder import DateEncoder
-from .models import UmKey, UmEventModel
+from .models import UmEventModel
 from .um import um_tasks, um_util
-
-CONTENT_TYPE_JSON = "application/json,charset=utf-8"
 
 
 def get_event_md5(um_eventId: str, curr_date: str):
@@ -47,12 +45,12 @@ def um_event_op(request):
     config_util.parse_config(None)
 
     # 判断友盟key
-    check_result_response = check_um_key(um_key=um_key)
+    check_result_response = http_util.check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
-    check_result_response = check_um_status(um_key=um_key)
+    check_result_response = http_util.check_um_status(um_key=um_key)
     if check_result_response:
         return check_result_response
 
@@ -74,7 +72,7 @@ def um_event_op(request):
         'msg': '操作成功',
         'data': None
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.check_um_key)
 
 
 @require_http_methods(["POST"])
@@ -96,13 +94,13 @@ def um_event(request):
     config_util.parse_config(None)
 
     # 判断友盟key
-    check_result_response = check_um_key(um_key=um_key)
+    check_result_response = http_util.check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
     if refresh:
-        check_result_response = check_um_status(um_key=um_key)
+        check_result_response = http_util.check_um_status(um_key=um_key)
         if check_result_response:
             return check_result_response
 
@@ -130,7 +128,7 @@ def um_event(request):
             'total': total
         }
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.check_um_key)
 
 
 def insert_event(results: list):
@@ -276,12 +274,12 @@ def um_event_export(request):
     config_util.parse_config(None)
 
     # 判断友盟key
-    check_result_response = check_um_key(um_key=um_key)
+    check_result_response = http_util.check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
-    check_result_response = check_um_status(um_key=um_key)
+    check_result_response = http_util.check_um_status(um_key=um_key)
     if check_result_response:
         return check_result_response
 
@@ -297,7 +295,7 @@ def um_event_export(request):
         'msg': '查询成功',
         'data': txt
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.check_um_key)
 
 
 @require_http_methods(["POST"])
@@ -310,12 +308,12 @@ def um_event_import(request):
     um_key: str = ''.join(request.POST.values()) if request.POST else ""
     
     # 判断友盟key
-    check_result_response = check_um_key(um_key=um_key)
+    check_result_response = http_util.check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
-    check_result_response = check_um_status(um_key=um_key)
+    check_result_response = http_util.check_um_status(um_key=um_key)
     if check_result_response:
         return check_result_response
 
@@ -325,7 +323,7 @@ def um_event_import(request):
         'msg': msg,
         'data': None
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.check_um_key)
 
 
 @require_http_methods(["POST"])
@@ -342,7 +340,7 @@ def um_event_update(request):
         'msg': msg,
         'data': None
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.check_um_key)
 
 
 def handle_uploaded_file(um_key: str, f):
@@ -401,37 +399,3 @@ def handle_update_file(um_key: str, f):
 
     return code, msg
 
-
-def check_um_status(um_key: str) -> HttpResponse:
-    """
-    检查友盟连接状态，
-    :param um_key:
-    :return: None=状态正常，HttpResponse=状态异常，直接返回该response
-    """
-    status, msg = um_util.check_um_status(um_key=um_key)
-    if status:
-        return None
-    else:
-        r = {
-            'code': 403,
-            'msg': msg or '操作失败',
-            'data': None
-        }
-        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
-
-
-def check_um_key(um_key: str) -> HttpResponse:
-    """
-    检查友盟key值，
-    :param um_key:
-    :return: None=状态正常，HttpResponse=状态异常，直接返回该response
-    """
-    if um_key:
-        return None
-    else:
-        r = {
-            'code': 200,
-            'msg': '友盟key不能为空',
-            'data': None
-        }
-        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)

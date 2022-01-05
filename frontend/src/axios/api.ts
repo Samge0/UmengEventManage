@@ -15,6 +15,8 @@ class api {
     del_um_key: (params?: any) => Request.post('/api/del_um_key', params),
     // 友盟key-设置主key
     um_key_master: (params?: any) => Request.post('/api/um_key_master', params),
+    // 友盟key-获取所有app列表
+    get_um_apps: () => Request.get('/api/get_um_apps'),
 
     // 配置管理-保存配置
     save_config: (params?: any) => Request.post('/api/save_config', params),
