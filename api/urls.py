@@ -3,9 +3,9 @@
 # @Time    : 2021/10/26 上午10:27
 # @Author  : Samge
 from django.conf.urls import url
-from .views import *
-from .views_kv import *
-from .views_event import *
+from .views.v_key import *
+from .views.v_kv import *
+from .views.v_event import *
 
 
 # http路由

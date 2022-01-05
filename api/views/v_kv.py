@@ -2,12 +2,9 @@ import json
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from . import config_util
-from .json_encoder import DateEncoder
-from .models import KeyValue
-
-# json格式
-CONTENT_TYPE_JSON = "application/json,charset=utf-8"
+from api.utils import u_config, u_http
+from api.utils.u_json import DateEncoder
+from api.models import KeyValue
 
 
 @require_http_methods(["GET"])
@@ -18,7 +15,7 @@ def get_kvs(request):
         'msg': 'success',
         'data': lst
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["GET"])
@@ -26,9 +23,9 @@ def get_config(request):
     r = {
         'code': 200,
         'msg': 'success',
-        'data': config_util.get_config()
+        'data': u_config.get_config()
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -67,7 +64,7 @@ def save_config(request):
             'msg': msg,
             'data': list(KeyValue.objects.filter().values())
         }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -113,7 +110,7 @@ def add_kv(request):
             'msg': msg,
             'data': list(KeyValue.objects.filter().values())
         }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -134,7 +131,7 @@ def del_kv(request):
             'msg': '删除成功',
             'data': list(KeyValue.objects.filter().values())
         }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -157,4 +154,4 @@ def kv_status(request):
             'msg': '设置成功',
             'data': list(KeyValue.objects.filter().values())
         }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)

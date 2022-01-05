@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/12/3 下午4:44
 # @Author  : Samge
-from .models import KeyValue
-from .um import um_tasks, um_util
+from api.models import KeyValue
+from api.um import um_tasks, um_util
 
 
 def get_key_value(config: dict, kv_key: str):

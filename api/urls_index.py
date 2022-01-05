@@ -3,7 +3,7 @@
 # @Time    : 2021/10/26 上午10:27
 # @Author  : Samge
 from django.conf.urls import url
-from .views import *
+from .views.v_key import *
 
 
 # http路由

@@ -7,12 +7,14 @@ import json
 from channels.generic.websocket import WebsocketConsumer
 
 
-# 消费者：友盟任务
-from . import config_util
-from .um import um_tasks, um_util
+from api.utils import u_config
+from api.um import um_tasks, um_util
 
 
 class UmConsumer(WebsocketConsumer):
+    """
+    消费者：友盟任务
+    """
 
     def connect(self):
         print(f"UmConsumer connect 成功连接")
@@ -56,14 +58,14 @@ class UmConsumer(WebsocketConsumer):
         if 'syn' == type:
             self.send(f"开始执行任务")
             um_util.um_socks = self
-            config_util.parse_config(config)
+            u_config.parse_config(config)
             um_tasks.do_um_synchro_task()
             self.send(f"任务完成")
 
         elif 'update' == type:
             self.send(f"开始执行任务")
             um_util.um_socks = self
-            config_util.parse_config(config)
+            u_config.parse_config(config)
             um_tasks.do_add_or_update_task()
             self.send(f"任务执行完毕")
 

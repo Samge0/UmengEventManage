@@ -1,6 +1,6 @@
 from django.conf.urls import url
-from . import views_sock
+from .views import v_sock
 
 websocket_urlpatterns = [
-    url(r'ws/um', views_sock.UmConsumer.as_asgi()),
+    url(r'ws/um', v_sock.UmConsumer.as_asgi()),
 ]

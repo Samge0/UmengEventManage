@@ -3,12 +3,10 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
-from . import config_util, http_util
-from .json_encoder import DateEncoder
-from .models import UmKey, KeyValue
-
-# json格式
-from .um import um_util
+from api.utils import u_config, u_http
+from api.utils.u_json import DateEncoder
+from api.models import UmKey, KeyValue
+from api.um import um_util
 
 
 @require_http_methods(["GET"])
@@ -23,14 +21,14 @@ def index(request):
 
 @require_http_methods(["GET"])
 def get_um_apps(request):
-    config_util.parse_config(None)
+    u_config.parse_config(None)
     lst, msg = um_util.query_app_list()
     r = {
         'code': 200,
         'msg': msg,
         'data': list(lst)
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["GET"])
@@ -41,7 +39,7 @@ def get_um_keys(request):
         'msg': 'success',
         'data': lst
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -84,7 +82,7 @@ def add_um_key(request):
             'data': list(UmKey.objects.filter().values())
         }
         update_um_key_cache(r.get('data'))
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -106,7 +104,7 @@ def del_um_key(request):
             'data': list(UmKey.objects.filter().values())
         }
         update_um_key_cache(r.get('data'))
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -129,7 +127,7 @@ def um_key_master(request):
             'data': list(UmKey.objects.filter().values())
         }
         update_um_key_cache(r.get('data'))
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=http_util.CONTENT_TYPE_JSON)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 def update_um_key_cache(lst):

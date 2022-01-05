@@ -7,6 +7,9 @@ import json
 
 
 class DateEncoder(json.JSONEncoder):
+    """
+    处理日期格式转json
+    """
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
             return obj.strftime("%Y-%m-%d %H:%M:%S")
