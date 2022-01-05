@@ -17,6 +17,7 @@ export class Request {
           resolve(res);
         } else {
           toast.showError(res.data.msg)
+          reject(res);
         }
       }).catch(err => {
         reject(err);
@@ -38,6 +39,7 @@ export class Request {
           resolve(res);
         } else {
           toast.showError(res.data.msg)
+          reject(res);
         }
       }).catch(err => {
         reject(err);
