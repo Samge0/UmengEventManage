@@ -6,11 +6,11 @@
       <el-header style="height:auto;" >
         <el-row class="box-header" type="flex" justify="space-between">
 
-          <el-col span="6">
+          <el-col :span="3" align="left">
             <a>任务管理</a>
           </el-col>
 
-          <el-col span="6">
+          <el-col :span="12" align="right">
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="timeLineList=[]">清空</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="initWebsocket">连接sock</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="stopTask">中止任务</el-button>

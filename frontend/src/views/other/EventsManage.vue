@@ -7,11 +7,11 @@
       <el-header style="height:auto;" >
         <el-row class="box-header" type="flex" justify="space-between">
 
-          <el-col span="6">
+          <el-col :span="3" align="left">
             <a>事件管理</a>
           </el-col>
 
-          <el-col span=6>
+          <el-col :span="12" align="right">
 <!--            当前选择当前友盟key-->
             <el-select v-model="query.um_key"
                        placeholder="Select"
@@ -33,7 +33,7 @@
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOp(0)">批量暂停</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOp(1)">批量恢复</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="dialogFormVisible = true;">上传事件</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportEvents">导出事件</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportCurrEvents">导出事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-sort" @click="showDrawer = true;">事件筛选</el-button>
           </el-col>
 
@@ -298,8 +298,8 @@ export default defineComponent({
             state.query.refresh = 0
             state.loading = false
           }).catch(() => {
-        state.loading = false
-      })
+            state.loading = false
+          })
     }
 
     // 编辑
@@ -339,17 +339,7 @@ export default defineComponent({
     }
 
     // 导出当前筛选的自定义事件
-    const exportEvents = () => {
-
-      /*
-      // 导出所有事件
-      api.um.um_event_export(state.query)
-          .then((res:any) => {
-            let blobTxt = new Blob([res.data.data], {type: 'text/plain;charset=utf-8'});
-            saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
-          })*/
-
-      // 导出当前筛选条件查询到的事件列表
+    const exportCurrEvents = () => {
       let txt: string = '';
       for (let item of state.tableData) {
         if (txt.length > 0) {
@@ -360,6 +350,15 @@ export default defineComponent({
       }
       let blobTxt = new Blob([txt], {type: 'text/plain;charset=utf-8'});
       saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
+    }
+
+    // 导出所有事件
+    const exportAllEvents = () => {
+      api.um.um_event_export(state.query)
+          .then((res:any) => {
+            let blobTxt = new Blob([res.data.data], {type: 'text/plain;charset=utf-8'});
+            saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
+          })
     }
 
     // 分页当前页改变的监听
@@ -453,7 +452,8 @@ export default defineComponent({
       addOrUpdateEvent,
       onCurrentPageChange,
       onPageSizeChange,
-      exportEvents,
+      exportCurrEvents,
+      exportAllEvents,
 
       handleSelectionChange,
 

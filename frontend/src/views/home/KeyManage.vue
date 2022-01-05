@@ -4,15 +4,15 @@
                   class="demo-shadow">
 
       <el-header style="height:auto;" >
-        <el-row class="box-header" type="flex" justify="space-between">
+        <el-row class="box-header" type="flex" justify="space-between" >
 
-          <el-col span="6">
+          <el-col :span="3" align="left">
             <a>友盟key管理</a>
           </el-col>
 
-          <el-col span="6">
+          <el-col :span="12" align="right">
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'">添加Key</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-menu" @click="showDrawer = true; getUmApps()">所有Key</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-menu" @click="showDrawer = true; getUmApps()">友盟应用</el-button>
           </el-col>
 
         </el-row>
@@ -53,7 +53,7 @@
             ></el-input>
           </el-form-item>
 
-          <el-form-item label="友盟key：" :label-width="formLabelWidth" required="true">
+          <el-form-item label="友盟key：" :label-width="formLabelWidth" :required="true">
             <el-input v-model="form.um_key"
                       autocomplete="off"
                       minlength="24"
@@ -68,10 +68,10 @@
 
           <el-form-item label="是否Master：" :label-width="formLabelWidth" >
             <el-row  type="flex" justify="space-between">
-              <el-col span="6">
+              <el-col :span="6">
                 <el-switch v-model="form.um_master" active-color="#13ce66" />
               </el-col>
-              <el-col span="6"/>
+              <el-col :span="6"/>
             </el-row>
           </el-form-item>
         </el-form>
@@ -84,29 +84,32 @@
         </template>
       </el-dialog>
 
-<!--      所有key-->
+<!--      所有key的右侧window-->
       <el-drawer
         v-model="showDrawer"
-        title="所有key"
+        title="友盟应用列表"
         direction="rtl"
         :before-close="onDrawerClose"
       >
-<!--      <el-table :data="allKeyList" v-show="allKeyList.length > 0">
-        <el-table-column prop="name" label="显示名称" />
-        <el-table-column prop="platform" label="平台类型"/>
-        <el-table-column prop="relatedId" label="友盟key"/>
-      </el-table>-->
+        <el-container direction="vertical">
 
-      <ul class="infinite-list">
-        <li v-for="i in allKeyList" :key="i" class="infinite-list-item">
-            <a style="width: 70%; align-items: flex-start">【{{i.platform}}】{{ i.name }}</a>
-            <div style="width: 30%;">
-              <el-button size="mini" type="primary" icon="el-icon-plus" @click="addApp(i.name, i.platform, i.relatedId)">添加</el-button>
-              <el-button size="mini" type="danger" icon="el-icon-minus" @click="removeApp(i.name, i.platform, i.relatedId)">移除</el-button>
-            </div>
-        </li>
-      </ul>
+<!--          友盟应用列表-->
+          <ul class="infinite-list">
+            <li v-for="i in allKeyList" :key="i" class="infinite-list-item">
+                <a style="width: 70%; align-items: flex-start">【{{i.platform}}】{{ i.name }}</a>
+                <div style="width: 30%;">
+                  <el-button size="mini" type="primary" icon="el-icon-plus" @click="addApp(i.name, i.platform, i.relatedId)">添加</el-button>
+                  <el-button size="mini" type="danger" icon="el-icon-minus" @click="removeApp(i.name, i.platform, i.relatedId)">移除</el-button>
+                </div>
+            </li>
+          </ul>
 
+<!--          空页面-->
+          <el-empty description="暂无相关数据" v-show="allKeyList.length == 0" style="margin-top: 100px">
+             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="this.$router.push('/other/config')">更新配置</el-button>
+          </el-empty>
+
+        </el-container>
       </el-drawer>
 
     </el-container>
@@ -125,13 +128,13 @@ export default defineComponent({
     const state = reactive({
       showDrawer: false,
       allKeyList: [
-        {
+        /*{
           name: '',       // xxxx产品
           appLevel: 0,    //
           platform: '',   // android
           relatedId: '',  // 友盟key
           isGame: false,  // 是否游戏
-        }
+        }*/
       ],
 
       tableData: [],

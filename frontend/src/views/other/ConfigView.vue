@@ -7,11 +7,11 @@
       <el-header style="height:auto;" >
         <el-row class="box-header" type="flex" justify="space-between">
 
-          <el-col span="6">
+          <el-col :span="3" align="left">
             <a>配置管理</a>
           </el-col>
 
-          <el-col span="6">
+          <el-col :span="12" align="right">
            <el-button size="mini" type="primary" icon="el-icon-setting" @click="login">友盟官网（去登录获取cookie等）</el-button>
           </el-col>
 
@@ -34,13 +34,13 @@
     style="margin: 20px;width: 96.5%"
   >
 
-    <el-form-item label="CONTENT_TYPE" required="true">
+    <el-form-item label="CONTENT_TYPE" :required="true">
       <el-input v-model="form.CONTENT_TYPE" placeholder="【必填】默认值为application/json;charset=UTF-8"></el-input>
     </el-form-item>
-    <el-form-item label="USER_AGENT" required="true">
+    <el-form-item label="USER_AGENT" :required="true">
       <el-input v-model="form.USER_AGENT" placeholder="【必填】请求头中的[user-agent]字段内容"></el-input>
     </el-form-item>
-     <el-form-item label="COOKIE" required="true">
+     <el-form-item label="COOKIE" :required="true">
       <el-input v-model="form.COOKIE" placeholder="【必填】友盟那边登录成功后请求头中的[cookie]字段内容"></el-input>
     </el-form-item>
     <el-form-item label="X_XSRF_TOKEN">

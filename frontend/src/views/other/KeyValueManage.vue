@@ -6,11 +6,11 @@
       <el-header style="height:auto;" >
         <el-row class="box-header" type="flex" justify="space-between">
 
-          <el-col span="6">
+          <el-col :span="3" align="left">
             <a>友盟键值对管理</a>
           </el-col>
 
-          <el-col span="6">
+          <el-col :span="12" align="right">
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogCommitTitle = '保存'; dialogFormVisible = true;">添加Key</el-button>
           </el-col>
 
@@ -44,14 +44,14 @@
       <!--弹窗-->
       <el-dialog v-model="dialogFormVisible" title="添加Key">
         <el-form :model="form">
-          <el-form-item label="显示名称：" :label-width="formLabelWidth" required="true">
+          <el-form-item label="显示名称：" :label-width="formLabelWidth" :required="true">
             <el-input v-model="form.kv_name" autocomplete="off"
                       placeholder="显示名的描述名"
                       maxlength="24"
                       show-word-limit="true"
             ></el-input>
           </el-form-item>
-          <el-form-item label="key：" :label-width="formLabelWidth" required="true">
+          <el-form-item label="key：" :label-width="formLabelWidth" :required="true">
             <el-input v-model="form.kv_key" autocomplete="off"
                       placeholder="key"
                       maxlength="24"
@@ -60,7 +60,7 @@
             ></el-input>
           </el-form-item>
 
-          <el-form-item label="值：" :label-width="formLabelWidth" required="true">
+          <el-form-item label="值：" :label-width="formLabelWidth" :required="true">
             <el-input v-model="form.kv_value"
                       autocomplete="off"
                       minlength="0"
@@ -73,10 +73,10 @@
 
           <el-form-item label="是否有效：" :label-width="formLabelWidth" >
             <el-row  type="flex" justify="space-between">
-              <el-col span="6">
+              <el-col :span="6">
                 <el-switch v-model="form.kv_status" active-color="#13ce66" />
               </el-col>
-              <el-col span="6"/>
+              <el-col :span="6"/>
             </el-row>
           </el-form-item>
         </el-form>
