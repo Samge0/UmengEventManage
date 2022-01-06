@@ -318,6 +318,10 @@ export default defineComponent({
 
     // 批量暂停/ 批量恢复
     const parseEventOp = (op_type: number) => {
+      if(state.ids.length == 0 || state.ids[0] == ''){
+        toast.showWarning("请先选择要操作的数据")
+        return
+      }
       let body = {
         'um_key': state.query.um_key,
         'op_type': op_type,
