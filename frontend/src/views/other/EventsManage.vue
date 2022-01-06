@@ -28,6 +28,7 @@
               </el-option>
             </el-select>
 
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-info" @click="openUmLink()">官网链接</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOp(0)">批量暂停</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOp(1)">批量恢复</el-button>
@@ -53,6 +54,7 @@
         <el-table-column type="index" />
         <el-table-column prop="um_name" sortable label="事件id" width="300" />
         <el-table-column prop="um_displayName" sortable label="事件名称" width="300" />
+        <el-table-column prop="um_eventType" sortable label="事件类型" width="130" />
         <el-table-column prop="um_countYesterday" sortable label="昨日消息数" width="130" />
         <el-table-column prop="um_countToday" sortable label="今日消息数" width="130" />
         <el-table-column prop="um_deviceYesterday" sortable label="昨日独立用户数" />
@@ -131,8 +133,8 @@
             <el-col>
               <el-select v-model="filterForm.type" placeholder="请选择事件类型">
                 <el-option label="不限类型" value=""></el-option>
-                <el-option label="多参数类型" value="0"></el-option>
-                <el-option label="计算类型" value="1"></el-option>
+                <el-option label="多参数类型事件" value="0"></el-option>
+                <el-option label="计算事件" value="1"></el-option>
               </el-select>
             </el-col>
           </el-form-item>
@@ -442,6 +444,13 @@ export default defineComponent({
       getUmEvents()
     }
 
+    /**
+     * 打开当前key对应的友盟官网事件管理页面
+     */
+    const openUmLink = () => {
+      window.open(`https://mobile.umeng.com/platform/${state.query.um_key}/function/events/dashboard`, "_blank");
+    }
+
     return {
       ...toRefs(state),
       getUmKeys,
@@ -465,6 +474,8 @@ export default defineComponent({
       onFilterReset,
 
       queryAllZeroEvent,
+
+      openUmLink,
     }
   },
 })
