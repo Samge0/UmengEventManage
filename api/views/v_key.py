@@ -77,9 +77,9 @@ def get_um_keys(request):
 @require_http_methods(["POST"])
 def add_um_key(request):
     post_body = json.loads(request.body)
-    um_key = post_body.get('um_key')
-    um_name = post_body.get('um_name') or um_key
-    um_master = post_body.get('um_master') or False
+    um_key: str = post_body.get('um_key')
+    um_name: str = post_body.get('um_name') or um_key
+    um_master: bool = post_body.get('um_master') or False
     um_status: int = post_body.get('um_status') or 0
 
     if not um_key:
@@ -96,6 +96,7 @@ def add_um_key(request):
         if force_update:
             key = keys[0]
             key.um_name = um_name
+            key.um_master = um_master
             key.um_status = um_status
             msg: str = '更新成功'
         else:
@@ -123,6 +124,7 @@ def add_um_key(request):
 def del_um_key(request):
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
+
     if not um_key:
         r = {
             'code': 200,
@@ -145,6 +147,7 @@ def del_um_key(request):
 def um_key_master(request):
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
+    um_master: bool = post_body.get('um_master') or False
     if not um_key:
         r = {
             'code': 200,
@@ -153,7 +156,10 @@ def um_key_master(request):
         }
     else:
         for key in UmKey.objects.filter() or []:
-            key.um_master = key.um_key == um_key
+            if key.um_key == um_key:
+                key.um_master = um_master
+            else:
+                key.um_master = False
             key.save(force_update=True)
         r = {
             'code': 200,
