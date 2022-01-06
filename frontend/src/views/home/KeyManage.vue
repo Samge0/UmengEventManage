@@ -11,7 +11,9 @@
           </el-col>
 
           <el-col :span="12" align="right">
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'">添加Key</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="resetDisplayName=true; refreshDrawer=true; getUmApps(); getUmKeys(true);">重置名称</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="refreshDrawer=true;  getUmApps(); getUmKeys(true);">刷新数据</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'" v-if="false">添加Key</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-menu" @click="showDrawer = true; getUmApps()">友盟应用</el-button>
           </el-col>
 
@@ -23,7 +25,7 @@
       <el-table :data="tableData" v-show="tableData.length > 0">
         <el-table-column prop="um_name" label="显示名称" width="300" />
         <el-table-column prop="um_key" label="友盟key" width="500" />
-        <el-table-column prop="um_master" label="是否Master" >
+        <el-table-column prop="um_master" label="是否Master">
           <template #default="scope">
             <el-switch v-model="scope.row.um_master"  active-color="#13ce66" @click="setMaster(scope.$index, scope.row)"/>
           </template>
@@ -33,7 +35,7 @@
        <el-table-column fixed="right" label="操作" min-width="280" align="right">
           <template #default="scope">
             <el-button class="el-button-right" type="primary" size="mini" @click="editUmKey(scope.$index, scope.row)" icon="el-icon-edit">编辑</el-button>
-            <el-button class="el-button-right" type="danger" size="mini" @click="deleteUmKey(scope.$index, scope.row)" icon="el-icon-close">删除</el-button>
+            <el-button class="el-button-right" type="danger" size="mini" @click="deleteUmKey(scope.$index, scope.row)" icon="el-icon-close">移除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -43,7 +45,7 @@
      </el-empty>
 
       <!--弹窗-->
-      <el-dialog v-model="dialogFormVisible" title="添加Key">
+      <el-dialog v-model="dialogFormVisible" :title="`${dialogCommitTitle}key`">
         <el-form :model="form">
           <el-form-item label="显示名称：" :label-width="formLabelWidth">
             <el-input v-model="form.um_name" autocomplete="off"
@@ -91,25 +93,21 @@
         direction="rtl"
         :before-close="onDrawerClose"
       >
-        <el-container direction="vertical">
-
-<!--          友盟应用列表-->
-          <ul class="infinite-list">
-            <li v-for="i in allKeyList" :key="i" class="infinite-list-item">
-                <a style="width: 70%; align-items: flex-start">【{{i.platform}}】{{ i.name }}</a>
-                <div style="width: 30%;">
-                  <el-button size="mini" type="primary" icon="el-icon-plus" @click="addApp(i.name, i.platform, i.relatedId)">添加</el-button>
-                  <el-button size="mini" type="danger" icon="el-icon-minus" @click="removeApp(i.name, i.platform, i.relatedId)">移除</el-button>
-                </div>
-            </li>
-          </ul>
-
 <!--          空页面-->
           <el-empty description="暂无相关数据" v-show="allKeyList.length == 0" style="margin-top: 100px">
              <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="this.$router.push('/other/config')">更新配置</el-button>
           </el-empty>
 
-        </el-container>
+<!--          友盟应用列表-->
+          <ul class="infinite-list">
+            <li v-for="i in allKeyList" :key="i" class="infinite-list-item">
+                <a style="width: 80%; align-items: flex-start">{{i.um_name}}</a>
+                <div style="width: 20%;">
+                  <el-button size="mini" type="primary" icon="el-icon-circle-plus-outline" @click="i.um_status=1; addApp(i.um_name, i.um_key)" v-if="i.um_status==0">添加</el-button>
+                  <el-button size="mini" type="danger" icon="el-icon-remove-outline" @click="i.um_status=0; removeApp(i.um_name, i.um_key)" v-if="i.um_status==1">移除</el-button>
+                </div>
+            </li>
+          </ul>
       </el-drawer>
 
     </el-container>
@@ -127,6 +125,8 @@ export default defineComponent({
   setup() {
     const state = reactive({
       showDrawer: false,
+      refreshDrawer: false,
+      resetDisplayName: false,
       allKeyList: [
         /*{
           name: '',       // xxxx产品
@@ -143,6 +143,7 @@ export default defineComponent({
         um_name: '',
         um_key: '',
         um_master: false,
+        um_status: 0,
       },
       formLabelWidth: '120px',
       dialogCommitTitle: '添加',
@@ -150,12 +151,14 @@ export default defineComponent({
 
 
     /**
-     * 从【友盟官网api】中获取所有应用列表
+     * 获取所有应用列表
      */
     const getUmApps = () => {
-      api.um.get_um_apps()
+      api.um.get_um_keys({'um_status': -1, 'reset_name': state.resetDisplayName, 'refresh': state.refreshDrawer || state.allKeyList.length == 0})
           .then((res:any) => {
-            state.allKeyList = res.data.data;
+            state.allKeyList = res.data.data
+            state.refreshDrawer = false
+            state.resetDisplayName = false
           })
     }
 
@@ -163,10 +166,15 @@ export default defineComponent({
     /**
      * 从数据库中获取已保存的友盟key
      */
-    const getUmKeys = () => {
-      api.um.get_um_keys()
+    const getUmKeys = (showTip: boolean = false) => {
+      api.um.get_um_keys({'um_status': 1, 'reset_name': state.resetDisplayName, 'refresh': state.refreshDrawer})
           .then((res:any) => {
-            state.tableData = res.data.data;
+            state.tableData = res.data.data
+            state.refreshDrawer = false
+            state.resetDisplayName = false
+            if(showTip){
+              toast.showSuccess("操作成功")
+            }
           })
     }
 
@@ -180,14 +188,15 @@ export default defineComponent({
       state.form = {
         um_name: row.um_name,
         um_key: row.um_key,
-        um_master: row.um_master
+        um_master: row.um_master,
+        um_status: row.um_status,
       }
       state.dialogFormVisible = true
       state.dialogCommitTitle = "更新"
     }
 
     /**
-     * 保存/更新 主机
+     * 保存/更新 友盟key
      */
     const addOrUpdateKey = () => {
       let reg = /^[A-Za-z0-9]+$/
@@ -205,17 +214,15 @@ export default defineComponent({
     }
 
     /**
-     * 删除友盟key
+     * 删除友盟key-现在改为软删除
      * @param index
      * @param row
      */
     const deleteUmKey = (index: any, row: any) => {
        console.log(row)
-       api.um.del_um_key(row)
-          .then((res:any) => {
-            state.tableData = res.data.data;
-            toast.showSuccess(res.data.msg)
-          })
+      state.form = row
+      state.form.um_status = 0
+      addOrUpdateKey()
     }
 
     /**
@@ -234,32 +241,34 @@ export default defineComponent({
 
     /**
      * 添加友盟app
-     * @param index
-     * @param row
+     * @param name
+     * @param um_key
      */
-    const addApp = (name: string, platform: string, relatedId: string) => {
-      console.log(`addApp: ${name}  ${platform}  ${relatedId}`)
+    const addApp = (um_name: string, um_key: string) => {
+      console.log(`addApp: ${um_name}  ${um_key} `)
       state.form = {
-        um_name: `【${platform}】${name}`,
-        um_key: relatedId,
+        um_name: um_name,
+        um_key: um_key,
         um_master: false,
+        um_status: 1
       }
       addOrUpdateKey()
     }
 
     /**
      * 移除友盟app
-     * @param index
-     * @param row
+     * @param name
+     * @param um_key
      */
-    const removeApp = (name: string, platform: string, relatedId: string) => {
-      console.log(`removeApp: ${name}  ${platform}  ${relatedId}`)
-      let form = {
-        um_name: `【${platform}】${name}`,
-        um_key: relatedId,
+    const removeApp = (um_name: string, um_key: string) => {
+      console.log(`removeApp: ${um_name}  ${um_key} `)
+      state.form = {
+        um_name: um_name,
+        um_key: um_key,
         um_master: false,
+        um_status: 0
       }
-      deleteUmKey(0, form)
+      addOrUpdateKey()
     }
 
     // 当右侧window关闭时
@@ -324,7 +333,7 @@ export default defineComponent({
 }
 
 .infinite-list {
-  height: 68%;
+  height: 65%;
   padding: 0;
   margin: 0;
   list-style: none;
@@ -335,7 +344,9 @@ export default defineComponent({
   align-items: center;
   height: 40px;
   background: var(--el-color-primary-light-9);
-  margin: 10px;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 12px;
   color: var(--el-color-primary);
 }
 .infinite-list .infinite-list-item a {

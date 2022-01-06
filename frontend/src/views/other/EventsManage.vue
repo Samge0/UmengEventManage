@@ -207,9 +207,6 @@ import {saveAs} from "file-saver";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 
-// interface UmEventBean{
-//   um_eventId: string
-// }
 
 export default defineComponent({
   created() {
@@ -278,7 +275,7 @@ export default defineComponent({
 
     // 获取友盟key列表
     const getUmKeys = () => {
-      api.um.get_um_keys()
+      api.um.get_um_keys({'um_status': 1, 'refresh': false})
           .then((res: any) => {
             if (res.data.data.length > 0) {
               state.umKeys = res.data.data
