@@ -106,15 +106,12 @@ def um_event(request):
 
     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     results: list = get_events_from_db(um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
-    total: int = len(results)
+    need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
 
-    if refresh or (len(results) == 0 and len(filter_dict or {}) == 0):
+    if need_refresh:
         results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
-        total: int = len(results)
-
         # 将新结果插入数据库
         insert_event(results=results)
-
         # 重新查询数据库
         results: list = get_events_from_db(um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     else:
@@ -125,7 +122,7 @@ def um_event(request):
         'msg': '查询成功',
         'data': {
             'lst': results[pg_start:pg_end],
-            'total': total
+            'total': len(results)
         }
     }
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.check_um_key)
@@ -237,6 +234,9 @@ def get_events_from_db(um_key: str, curr_date: str, filter_dict: dict):
         order_by: str = filter_dict.get('order_by')
         if 'desc' == filter_dict.get('order'):
             order_by = f'-{order_by}'
+    else:
+        # 状态，如果筛选条件不传, 默认查状态正常的数据
+        _filter = _filter & Q(um_status='normal')
 
     if order_by:
         obj = UmEventModel.objects.filter(_filter).order_by(order_by)

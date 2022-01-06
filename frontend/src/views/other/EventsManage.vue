@@ -62,7 +62,7 @@
 
 <!--      分页 background-->
      <el-pagination
-        layout="sizes, prev, pager, next, jumper"
+        layout="total, sizes, prev, pager, next, jumper"
         :current-page="query.pg_index"
         :page-size="query.pg_size"
         :page-sizes="[15, 30, 50, 120, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000]"
@@ -283,6 +283,9 @@ export default defineComponent({
               state.query.um_key = res.data.data[0].um_key
               getUmEvents()
             }
+          }).catch(() => {
+            state.tableData = []
+            state.loading = false
           })
     }
 
@@ -296,6 +299,7 @@ export default defineComponent({
             state.query.refresh = 0
             state.loading = false
           }).catch(() => {
+            state.tableData = []
             state.loading = false
           })
     }
