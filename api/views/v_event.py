@@ -87,7 +87,7 @@ def um_event(request):
     refresh: bool = post_body.get('refresh') == 1
     pg_index: str = post_body.get('pg_index') or 1
     pg_size: str = post_body.get('pg_size') or 20
-    filter_dict: dict = post_body.get('filter') or None
+    filter_dict: dict = post_body.get('filter') or {}
     pg_start = (pg_index-1)*pg_size
     pg_end = pg_size*pg_index
 
@@ -108,7 +108,7 @@ def um_event(request):
     results: list = get_events_from_db(um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     total: int = len(results)
 
-    if refresh or len(results) == 0:
+    if refresh or (len(results) == 0 and len(filter_dict or {}) == 0):
         results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
         total: int = len(results)
 
@@ -191,7 +191,7 @@ def get_events_from_db(um_key: str, curr_date: str, filter_dict: dict):
     """
     order_by: str = None
     _filter: Q = Q(um_key=um_key) & Q(um_date=curr_date)
-    if filter_dict:
+    if filter_dict and len(filter_dict or {}) > 0:
         print(f"存在筛选条件，进行筛选查询：{filter_dict}")
 
         # 关键词
@@ -254,8 +254,8 @@ def get_min_max(count_limit, key_min, key_max):
     :param key_max:
     :return:
     """
-    _max: int = count_limit.get(key_min) if count_limit.get(key_min) is not None else -1
-    _min: int = count_limit.get(key_max) if count_limit.get(key_max) is not None else -1
+    _max: int = count_limit.get(key_max) if count_limit.get(key_max) is not None else -1
+    _min: int = count_limit.get(key_min) if count_limit.get(key_min) is not None else -1
     _min: int = _max if _min > _max else _min
     return _min, _max
 
