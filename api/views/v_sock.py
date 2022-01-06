@@ -40,19 +40,9 @@ class UmConsumer(WebsocketConsumer):
             type = text_data_json.get('type')
             config = text_data_json.get('config')
 
-        # message = text_data_json['message']
-
-        # self.send(msg=json.dumps({
-        #     'message': msg
-        # }))
-
-        # for i in range(10):
-        #     time.sleep(1)
-        #     self.send(f"{i}")
-
         error_msg: str = check_env(self, config)
         if error_msg:
-            self.send(f"任务执行完毕")
+            self.send(f"任务执行中止")
             return
 
         if 'syn' == type:
@@ -78,7 +68,7 @@ class UmConsumer(WebsocketConsumer):
             self.send("已连接")
 
 
-def check_env(self, config):
+def check_env(self, config) -> str:
     """
     配置检测
     :return:
@@ -103,4 +93,10 @@ def check_env(self, config):
     if not config.get('UM_KEY_SLAVES'):
         error_msg = "请先配置 UM_KEY_SLAVES"
         self.send(error_msg)
+
+    status, msg = um_util.check_um_status(um_key=config.get('UM_KEY_MASTER'))
+    if status != 200:
+        error_msg = msg
+        self.send(error_msg)
+
     return error_msg
