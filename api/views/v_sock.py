@@ -32,43 +32,46 @@ class UmConsumer(WebsocketConsumer):
 
     def receive(self, text_data):
         print(f"UmConsumer receive 接收数据：{text_data}")
-        type = -1
-        config = None
+        msg_type: str = ''
+        config: dict = None
 
         if '{' in text_data:
             text_data_json = json.loads(text_data) or {}
-            type = text_data_json.get('type')
+            msg_type = text_data_json.get('type')
             config = text_data_json.get('config')
 
-        error_msg: str = check_env(self, config)
-        if error_msg:
-            self.send(f"任务执行中止")
+        if is_bad_evn(self, config):
             return
 
-        if 'syn' == type:
-            self.send(f"开始执行任务")
-            um_util.um_socks = self
+        if 'syn' == msg_type:
             u_config.parse_config(config)
-            um_tasks.do_um_synchro_task()
-            self.send(f"任务完成")
+            if not is_bad_um_status(self, config):
+                self.send(f"开始执行任务")
+                um_util.um_socks = self
+                um_tasks.do_um_synchro_task()
+                self.send(f"任务完成")
 
-        elif 'update' == type:
-            self.send(f"开始执行任务")
-            um_util.um_socks = self
+        elif 'update' == msg_type:
             u_config.parse_config(config)
-            um_tasks.do_add_or_update_task()
-            self.send(f"任务执行完毕")
+            if not is_bad_um_status(self, config):
+                self.send(f"开始执行任务")
+                um_util.um_socks = self
+                um_tasks.do_add_or_update_task()
+                self.send(f"任务执行完毕")
 
-        elif 'stop' == type:
+        elif 'stop' == msg_type:
             um_util.stop = True
-            self.send(f"任务已中止")
+            self.send(f"断开上一个连接")
+
+        elif 'connect' == msg_type:
+            self.send(f"已连接")
 
         else:
-            print("消息口令不对")
-            self.send("已连接")
+            self.send(f"消息口令不对: {msg_type}")
+            self.send(f"任务已中止")
 
 
-def check_env(self, config) -> str:
+def is_bad_evn(self, config) -> str:
     """
     配置检测
     :return:
@@ -93,10 +96,19 @@ def check_env(self, config) -> str:
     if not config.get('UM_KEY_SLAVES'):
         error_msg = "请先配置 UM_KEY_SLAVES"
         self.send(error_msg)
-
-    status, msg = um_util.check_um_status(um_key=config.get('UM_KEY_MASTER'))
-    if status != 200:
-        error_msg = msg
-        self.send(error_msg)
-
+    if error_msg:
+        self.send(f"任务执行中止")
     return error_msg
+
+
+def is_bad_um_status(self, config) -> str:
+    """
+    配置友盟登录状态
+    :return:
+    """
+    status, msg = um_util.check_um_status(um_key=config.get('UM_KEY_MASTER'))
+    if status:
+        return None
+    self.send(msg)
+    self.send(f"任务执行中止")
+    return msg

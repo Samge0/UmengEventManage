@@ -12,10 +12,10 @@
 
           <el-col :span="12" align="right">
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="timeLineList=[]">清空</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="initWebsocket">连接sock</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="stopTask">中止任务</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" v-if="false" @click="initWebsocket()">连接sock</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="stopTask()">中止任务</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="dialogFormVisible = true;">上传/更新事件</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-phone" @click="startSynTask">执行【同步】任务</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-phone" @click="startSynTask()">执行【同步】任务</el-button>
           </el-col>
 
         </el-row>
@@ -197,7 +197,7 @@ export default defineComponent({
      */
     const websocketOnOpen = () => {
         console.log('websocketOnOpen');
-        websocketSend({'tip': '已连接', 'config': state.umConfig})
+        websocketSend({'type': 'connect', 'config': state.umConfig})
         if(state.taskType != null && state.taskType != ''){
           let data = {
             'type': state.taskType,

@@ -19,7 +19,7 @@ def do_um_synchro_task():
     """
     um_util.cache_event_list(um_keys=[UM_KEY_MASTER] + list(UM_KEY_SLAVES))
     for um_key in UM_KEY_SLAVES:
-        um_util.update_um_data(um_key=um_key, um_key_source=UM_KEY_MASTER)
+        um_util.update_um_data(um_key=um_key, um_key_master=UM_KEY_MASTER)
 
 
 def do_add_or_update_task():
