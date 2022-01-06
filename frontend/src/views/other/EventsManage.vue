@@ -11,13 +11,12 @@
             <a>事件管理</a>
           </el-col>
 
-          <el-col :span="12" align="right">
+          <el-col :span="20" align="right">
 <!--            当前选择当前友盟key-->
             <el-select v-model="query.um_key"
                        placeholder="Select"
                        size="mini"
-                       class="el-button-add"
-                       style="margin-right: 20px"
+                       style="margin-right: 20px;"
                        @change="onUmKeyChange"
             >
               <el-option
