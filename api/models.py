@@ -11,6 +11,7 @@ class UmKey(models.Model):
     um_key = models.CharField(max_length=128)
     um_name = models.CharField(max_length=20)
     um_master = models.BooleanField(default=False)
+    um_status = models.IntegerField(default=0)      # 是否有效; 0=无效（未选中）；1=有效
     um_add_time = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):

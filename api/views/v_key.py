@@ -31,9 +31,41 @@ def get_um_apps(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
 def get_um_keys(request):
-    lst = list(UmKey.objects.filter().values())
+    u_config.parse_config(None)
+    post_body = json.loads(request.body)
+    um_status: int = post_body.get('um_status') or -1
+    refresh: bool = post_body.get('refresh') or False
+    reset_name: bool = post_body.get('reset_name') or False
+
+    # 如果需要刷新, 从友盟官网api拉取新的应用列表并存储
+    if refresh:
+        lst_app, msg, code = um_util.query_app_list()
+        if code != 200:
+            r = {
+                'code': code,
+                'msg': msg,
+                'data': None
+            }
+            return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+        for _app in lst_app:
+            um_key: str = _app.get('relatedId')
+            um_name: str = f"【{_app.get('platform')}】{_app.get('name')}"
+            keys = UmKey.objects.filter(um_key=um_key)
+            force_update: bool = True if keys and len(keys) > 0 else False
+            if force_update:
+                key = keys[0]
+                if reset_name:
+                    key.um_name = um_name
+            else:
+                key = UmKey(um_key=um_key, um_name=um_name, um_master=False)
+            key.save(force_update=force_update)
+    # 重新查数据库
+    if um_status >= 0:
+        lst = list(UmKey.objects.filter(um_status=um_status).values() or [])
+    else:
+        lst = list(UmKey.objects.filter().values() or [])
     r = {
         'code': 200,
         'msg': 'success',
@@ -48,6 +80,7 @@ def add_um_key(request):
     um_key = post_body.get('um_key')
     um_name = post_body.get('um_name') or um_key
     um_master = post_body.get('um_master') or False
+    um_status: int = post_body.get('um_status') or 0
 
     if not um_key:
         r = {
@@ -63,9 +96,10 @@ def add_um_key(request):
         if force_update:
             key = keys[0]
             key.um_name = um_name
+            key.um_status = um_status
             msg: str = '更新成功'
         else:
-            key = UmKey(um_key=um_key, um_name=um_name, um_master=um_master)
+            key = UmKey(um_key=um_key, um_name=um_name, um_master=um_master, um_status=um_status)
             msg: str = '保存成功'
         key.save(force_update=force_update)
 
@@ -79,7 +113,7 @@ def add_um_key(request):
         r = {
             'code': 200,
             'msg': msg,
-            'data': list(UmKey.objects.filter().values())
+            'data': list(UmKey.objects.filter(um_status=1).values())
         }
         update_um_key_cache(r.get('data'))
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
@@ -101,7 +135,7 @@ def del_um_key(request):
         r = {
             'code': 200,
             'msg': '删除成功',
-            'data': list(UmKey.objects.filter().values())
+            'data': list(UmKey.objects.filter(um_status=1).values())
         }
         update_um_key_cache(r.get('data'))
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
@@ -124,7 +158,7 @@ def um_key_master(request):
         r = {
             'code': 200,
             'msg': '设置成功',
-            'data': list(UmKey.objects.filter().values())
+            'data': list(UmKey.objects.filter(um_status=1).values())
         }
         update_um_key_cache(r.get('data'))
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)

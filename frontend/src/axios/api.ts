@@ -10,7 +10,7 @@ class api {
     // 友盟key-添加
     add_um_key: (params?: any) => Request.post('/api/add_um_key', params),
     // 友盟key-获取列表
-    get_um_keys: () => Request.get('/api/get_um_keys'),
+    get_um_keys: (params?: any) => Request.post('/api/get_um_keys', params),
     // 友盟key-删除
     del_um_key: (params?: any) => Request.post('/api/del_um_key', params),
     // 友盟key-设置主key
