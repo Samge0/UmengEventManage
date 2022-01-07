@@ -1,6 +1,26 @@
 from django.db import models
 
 
+class User(models.Model):
+    """
+    用户账号的model
+    """
+    indexes = [
+        models.Index(fields=['u_id']),  # 单索引
+    ]
+    u_id = models.CharField(max_length=11)
+    u_name = models.CharField(max_length=20)
+    u_pw = models.CharField(max_length=128)
+    u_phone = models.CharField(max_length=11)
+    u_email = models.CharField(max_length=128)
+    u_token = models.CharField(max_length=128, default="")
+    u_reg_time = models.DateTimeField(auto_now_add=True)
+    u_last_time = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return self.u_id
+
+
 class UmKey(models.Model):
     """
     友盟key的model
