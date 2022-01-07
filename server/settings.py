@@ -125,13 +125,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# 设置时区; 设置TIME_ZONE = 'Asia/Shanghai', USE_TZ = False 则使用上海的UTC时间。
+TIME_ZONE = 'Asia/Shanghai'
+USE_TZ = False
 
 USE_I18N = True
-
 USE_L10N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -176,3 +175,4 @@ CORS_ALLOW_HEADERS = (
     'x-csrftoken',
     'x-requested-with',
 )
+
