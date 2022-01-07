@@ -72,7 +72,7 @@ def um_event_op(request):
         'msg': '操作成功',
         'data': None
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.check_um_key)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -125,7 +125,7 @@ def um_event(request):
             'total': len(results)
         }
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.check_um_key)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 def insert_event(results: list):
@@ -295,7 +295,7 @@ def um_event_export(request):
         'msg': '查询成功',
         'data': txt
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.check_um_key)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -323,7 +323,7 @@ def um_event_import(request):
         'msg': msg,
         'data': None
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.check_um_key)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 @require_http_methods(["POST"])
@@ -340,7 +340,7 @@ def um_event_update(request):
         'msg': msg,
         'data': None
     }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.check_um_key)
+    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
 def handle_uploaded_file(um_key: str, f):
