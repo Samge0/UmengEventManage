@@ -35,7 +35,7 @@
         <el-input v-model="regForm.u_name" placeholder="请输入用户名"></el-input>
       </el-form-item>
       <el-form-item label="手机号：" :required="true">
-        <el-input v-model="regForm.u_phone" placeholder="奇怪呢输入手机号"></el-input>
+        <el-input v-model="regForm.u_phone" placeholder="请输入手机号"></el-input>
       </el-form-item>
       <el-form-item label="邮箱：" v-if="false">
         <el-input v-model="regForm.u_email" placeholder="请输入邮箱"></el-input>

@@ -82,8 +82,10 @@ def reg(request):
     u_name = post_body.get('u_name') or u_phone or u_email
     u_pw = post_body.get('u_pw') or ""
 
-    if not u_email or not u_code or not u_pw:
-        code, msg, data = 400, '邮箱、验证码、密码不能为空', None
+    if not u_email and not u_phone:
+        code, msg, data = 400, '账号不能为空', None
+    elif not u_code or not u_pw:
+        code, msg, data = 400, '验证码、密码不能为空', None
     elif len(u_pw) < 6:
         code, msg, data = 400, '密码最小长度需要6个字符', None
     elif u_code != TEST_V_CODE:
