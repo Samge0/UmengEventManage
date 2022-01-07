@@ -7,7 +7,7 @@
     <router-link to="/other/events">事件管理</router-link> <br>
     <router-link to="/other/kvManage">键值管理</router-link> <br>
   </div>-->
-    <el-aside width="180px">
+    <el-aside width="180px" v-if="currPath != '/login'">
       <el-menu
           text-color="#ffffff"
           active-text-color="#409EFF"

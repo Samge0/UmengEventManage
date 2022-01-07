@@ -13,17 +13,17 @@ module.exports = {
         https: false,
         hotOnly: false,
         // http 代理配置
-        proxy: 'http://localhost:8000',
-        // proxy: {
-        //     '/api': {
-        //         target: 'http://localhost',
-        //         changeOrigin: true,
-        //         secure: false,
-        //         pathRewrite: {
-        //             '^/api': '/'
-        //         }
-        //     }
-        // },
+        // proxy: 'http://localhost:8000',
+        proxy: {
+            '/': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+                secure: false,
+                pathRewrite: {
+                    '^/': '/'
+                }
+            }
+        },
         before: (app) => {}
     },
     css: {

@@ -46,6 +46,11 @@ class api {
     // 友盟socket连接
     um_socket: `${Base.BASE_URL_SOCKET}/ws/um`,
 
+    // 登录
+    login: (params?: any) => Request.post('/api/login', params),
+    // 注册
+    reg: (params?: any) => Request.post('/api/reg', params),
+
   }
 }
 

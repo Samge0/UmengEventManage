@@ -1,6 +1,7 @@
 import HomeView from "@/views/home/KeyManage.vue";
 import KeyValueManage from "@/views/other/KeyValueManage.vue";
 import ConfigView from "@/views/other/ConfigView.vue";
+import LoginView from "@/views/user/LoginView.vue";
 // @ts-ignore
 import TaskManage from "@/views/other/TaskManage";
 // @ts-ignore
@@ -9,29 +10,35 @@ import {createRouter, createWebHashHistory} from "vue-router";
 
 // 2. 定义路由配置
 const routes = [
+
   {
     path: "/",
-    redirect: '/home'
+    redirect: '/home',
+    name: '首页'
   },
 
   {
     path: "/home",
-    component: HomeView
+    component: HomeView,
+    name: '友盟Key'
   },
 
   {
     path: "/other/task",
     component: TaskManage,
+    name: '任务管理'
   },
 
   {
     path: "/other/kvManage",
     component: KeyValueManage,
+    name: '键值管理'
   },
 
   {
     path: "/other/events",
     component: EventsManage,
+    name: '事件管理',
     meta: {
       keepAlive:true,
      },
@@ -40,6 +47,13 @@ const routes = [
   {
     path: "/other/config",
     component: ConfigView,
+    name: '配置管理'
+  },
+
+  {
+    path: "/login",
+    component: LoginView,
+    name: '注册登录'
   },
 ];
 

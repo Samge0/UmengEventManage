@@ -12,7 +12,7 @@ const instance = axios.create({
     "Content-Type": "application/json;charset=UTF-8",
   },
   // 表示跨域请求时是否需要使用凭证
-  withCredentials: false,
+  withCredentials: true,
 })
 
 /**
@@ -31,6 +31,7 @@ instance.interceptors.request.use(
     // 后台根据携带的token判断用户的登录情况，并返回给我们对应的状态码
     // 而后我们可以在响应拦截器中，根据状态码进行一些统一的操作。
     // config.headers.Authorization = store.state.Roles;
+    config.headers.Authorization = localStorage.getItem("token");
     return config;
   },
   error => {
@@ -42,19 +43,13 @@ instance.interceptors.request.use(
 
 // 响应拦截器
 instance.interceptors.response.use(function (config) {
-
   removePending(config.config);
-  // 请求成功
   if (config.status === 200 || config.status === 204) {
-    /*setTimeout(() => {
-    }, 400)*/
     return Promise.resolve(config);
   } else {
     return Promise.reject(config);
   }
-  // 请求失败
 }, function (error) {
-
   const { response } = error;
   if (response) {
     errorHandle(response.status, response.data.message);
@@ -98,16 +93,6 @@ instance.interceptors.response.use(function (config) {
 )
 
 /**
- * 跳转登录页
- * 携带当前页面路由，以期在登录页面完成登录后返回当前页面
- */
-/*const toLogin = () => {
-  router.replace({
-    name: 'LoginPage',
-  });
-}*/
-
-/**
  * 显示错误信息
  * @param msg
  */
@@ -121,7 +106,7 @@ const showErrorMsg = (msg: string) => {
  * @param {Number} msg 错误消息
  */
 const errorHandle = (status: number, msg: string) => {
-  console.log(`${status} : ${msg}`)
+  console.log(`errorHandle ${status} : ${msg}`)
   // 状态码判断
   switch (status) {
 
@@ -146,11 +131,9 @@ const errorHandle = (status: number, msg: string) => {
     case 403:
       // 403 token过期 清除token并跳转登录页
       showErrorMsg("授权信息已过期，请重新登录")
-      /*setTimeout(() => {
-        router.replace({
-          path: '/Login',
-        });
-      }, 1000);*/
+      setTimeout(() => {
+        // this.$router.push('/login')
+      }, 1000);
       break;
 
     case 404:
@@ -190,6 +173,7 @@ const errorHandle = (status: number, msg: string) => {
 
     default:
       showErrorMsg("其他错误错误")
+      break;
   }
 }
 

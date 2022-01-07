@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
 from api.utils import u_config, u_http
+from api.utils.u_check import check_login
 from api.utils.u_json import DateEncoder
 from api.models import UmKey, KeyValue
 from api.um import um_util
@@ -31,6 +32,7 @@ def get_um_apps(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def get_um_keys(request):
     u_config.parse_config(None)
