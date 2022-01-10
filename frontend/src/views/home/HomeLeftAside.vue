@@ -102,8 +102,13 @@ export default defineComponent({
         if(window.location.href.concat("#")){
           state.currPath = window.location.href.split("#")[1]
         }
-        state.u_name = localStorage.getItem('u_name') || ''
         console.log(`state.currPath = ${state.currPath}`)
+
+        let name = localStorage.getItem('u_name') || ''
+        if(name.length > 7){
+          name = `${name.substr(0, 3)}...${name.substr(name.length-2, name.length)}`
+        }
+        state.u_name = name
      }
 
     /**
