@@ -117,8 +117,6 @@ export default defineComponent({
     const loginOut = () =>{
         toast.showWarning("请重新登录")
         localStorage.setItem('token', '');
-        localStorage.setItem('u_id', '');
-        localStorage.setItem('u_name', '');
         router.push('/login')
      }
 
