@@ -1,13 +1,18 @@
 <template>
 <!--        左侧栏-->
-<!--  <div id="nav"  width="180px">
-    <router-link to="/home">友盟KEY</router-link> <br>
-    <router-link to="/other/config">配置管理</router-link> <br>
-    <router-link to="/other/task">任务管理</router-link> <br>
-    <router-link to="/other/events">事件管理</router-link> <br>
-    <router-link to="/other/kvManage">键值管理</router-link> <br>
-  </div>-->
-    <el-aside width="180px" v-if="currPath != '/login'">
+    <el-aside width="150px" v-if="currPath != '/login'" style="text-align: left;">
+
+<!--      登录账号-->
+      <el-dropdown size="mini" split-button type="primary" style="padding-left: 20px; padding-bottom: 10px;">
+        <i class="el-icon-info"/> {{u_name}}
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item @click="loginOut">登出</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+
+<!--      菜单-->
       <el-menu
           text-color="#ffffff"
           active-text-color="#409EFF"
@@ -15,13 +20,14 @@
           :router="true"
           :default-active="currPath"
           @select = "selectMenu"
+          style="--el-menu-border-color:'#00000000'"
       >
       <el-menu-item
           v-for="item in items"
           :key="item.id"
           :index="item.path"
       >
-        <template #title><i class="{{item.icon}}"></i>{{item.name}}</template>
+        <i :class="item.icon"/>{{item.name}}
       </el-menu-item>
       </el-menu>
     </el-aside>
@@ -29,6 +35,8 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRefs } from 'vue'
+import {toast} from "@/utils/toast";
+import router from "@/router";
 export default defineComponent({
 
   created() {
@@ -42,30 +50,31 @@ export default defineComponent({
 
   setup() {
     const state = reactive({
+      u_name: '登录',
       currPath: "/home",
       items: [
         {
           "name": "友盟KEY",
           "id": "1",
-          "icon": "el-icon-edit",
+          "icon": "el-icon-menu",
           "path": "/home",
         },
           {
           "name": "配置管理",
           "id": "2",
-          "icon": "el-icon-setting",
+          "icon": "el-icon-edit-outline",
           "path": "/other/config",
         },
         {
           "name": "任务管理",
           "id": "3",
-          "icon": "el-icon-menu",
+          "icon": "el-icon-time",
           "path": "/other/task",
         },
         {
           "name": "事件管理",
           "id": "4",
-          "icon": "el-icon-setting",
+          "icon": "el-icon-date",
           "path": "/other/events",
         },
         /*{
@@ -93,13 +102,26 @@ export default defineComponent({
         if(window.location.href.concat("#")){
           state.currPath = window.location.href.split("#")[1]
         }
+        state.u_name = localStorage.getItem('u_name') || ''
         console.log(`state.currPath = ${state.currPath}`)
+     }
+
+    /**
+     * 退出登录
+     */
+    const loginOut = () =>{
+        toast.showWarning("请重新登录")
+        localStorage.setItem('token', '');
+        localStorage.setItem('u_id', '');
+        localStorage.setItem('u_name', '');
+        router.push('/login')
      }
 
     return {
       ...toRefs(state),
       selectMenu,
       fetchData,
+      loginOut,
     }
   },
 })
