@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
 from api.utils import u_config, u_http
+from api.utils.u_check import check_login
 from api.utils.u_json import DateEncoder
 from api.models import UmEventModel
 from api.um import um_tasks, um_util
@@ -29,6 +30,7 @@ def get_event_md5(um_eventId: str, curr_date: str):
     return hashlib.md5(md5_value.encode(encoding='utf-8')).hexdigest()
 
 
+@check_login
 @require_http_methods(["POST"])
 def um_event_op(request):
     """
@@ -75,6 +77,7 @@ def um_event_op(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def um_event(request):
     """
@@ -260,6 +263,7 @@ def get_min_max(count_limit, key_min, key_max):
     return _min, _max
 
 
+@check_login
 @require_http_methods(["POST"])
 def um_event_export(request):
     """
@@ -298,6 +302,7 @@ def um_event_export(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def um_event_import(request):
     """
@@ -326,6 +331,7 @@ def um_event_import(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def um_event_update(request):
     """

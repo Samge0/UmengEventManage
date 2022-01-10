@@ -3,10 +3,12 @@ from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
 from api.utils import u_config, u_http
+from api.utils.u_check import check_login
 from api.utils.u_json import DateEncoder
 from api.models import KeyValue
 
 
+@check_login
 @require_http_methods(["GET"])
 def get_kvs(request):
     lst = list(KeyValue.objects.filter().values())
@@ -18,6 +20,7 @@ def get_kvs(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["GET"])
 def get_config(request):
     r = {
@@ -28,6 +31,7 @@ def get_config(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def save_config(request):
     post_body = json.loads(request.body)
@@ -67,6 +71,7 @@ def save_config(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def add_kvs(request):
     post_body = json.loads(request.body)
@@ -74,6 +79,7 @@ def add_kvs(request):
         add_kv(key_dict)
 
 
+@check_login
 @require_http_methods(["POST"])
 def add_kv(request):
     post_body = json.loads(request.body)
@@ -113,6 +119,7 @@ def add_kv(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def del_kv(request):
     post_body = json.loads(request.body)
@@ -134,6 +141,7 @@ def del_kv(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def kv_status(request):
     post_body = json.loads(request.body)

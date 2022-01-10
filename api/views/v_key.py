@@ -21,6 +21,7 @@ def index(request):
 
 
 @require_http_methods(["GET"])
+@check_login
 def get_um_apps(request):
     u_config.parse_config(None)
     lst, msg, code = um_util.query_app_list()
@@ -76,6 +77,7 @@ def get_um_keys(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def add_um_key(request):
     post_body = json.loads(request.body)
@@ -122,6 +124,7 @@ def add_um_key(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def del_um_key(request):
     post_body = json.loads(request.body)
@@ -145,6 +148,7 @@ def del_um_key(request):
     return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
 
 
+@check_login
 @require_http_methods(["POST"])
 def um_key_master(request):
     post_body = json.loads(request.body)
