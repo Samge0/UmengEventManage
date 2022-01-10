@@ -20,15 +20,26 @@ from api.utils.u_json import DateEncoder
 TEST_V_CODE = '666666'
 
 
-def is_exist_user(u_id: str = '', u_email: str = '', u_phone: str = ''):
+def is_exist_user(u_id: str = '', u_email: str = '', u_phone: str = '', u_name: str = ''):
     """
     判断用户是否存在
     :param u_id:
     :param u_email:
     :param u_phone:
+    :param u_name:
     :return:
     """
-    _filter: Q = Q(u_id=u_id) | Q(u_email=u_email) | Q(u_phone=u_phone)
+    if not u_id and not u_email and not u_phone and not u_name:
+        return False
+    _filter: Q = None
+    if u_id:
+        _filter = Q(u_id=u_id)
+    if u_email:
+        _filter = _filter | Q(u_email=u_email) if _filter else Q(u_email=u_email)
+    if u_phone:
+        _filter = _filter | Q(u_phone=u_phone) if _filter else Q(u_phone=u_phone)
+    if u_name:
+        _filter = _filter | Q(u_name=u_name) if _filter else Q(u_name=u_name)
     return len(User.objects.filter(_filter) or []) > 0
 
 
@@ -95,6 +106,8 @@ def reg(request):
             code, msg, data = 400, '该手机号已被注册', None
         elif is_exist_user(u_email=u_email):
             code, msg, data = 400, '该邮箱已被注册', None
+        elif is_exist_user(u_name=u_name):
+            code, msg, data = 400, '该用户名已被注册', None
         else:
             u_id: str = get_random_uid()
             u_token: str = create_token(u_id=u_id)
