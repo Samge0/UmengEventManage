@@ -15,7 +15,7 @@ from api.utils import u_http
 from api.utils.u_json import DateEncoder
 
 # token过期时间，单位：秒
-TOKEN_EXPIRE_TIME = 1 * 60
+TOKEN_EXPIRE_TIME = 60 * 60 * 24 * 365
 
 
 def check_login(func):
