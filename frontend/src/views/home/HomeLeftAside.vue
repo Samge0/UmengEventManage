@@ -1,6 +1,6 @@
 <template>
 <!--        左侧栏-->
-    <el-aside width="150px" v-if="currPath != '/login'" style="text-align: left;">
+    <el-aside width="180px" v-if="currPath != '/login'" style="text-align: left;">
 
 <!--      登录账号-->
       <el-dropdown size="mini" split-button type="primary" style="padding-left: 20px; padding-bottom: 10px;">
