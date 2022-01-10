@@ -4,7 +4,7 @@
                   class="demo-shadow">
 
       <el-header style="height:auto;" >
-        <el-row class="box-header" type="flex" justify="space-between">
+        <el-row type="flex" justify="space-between">
 
           <el-col :span="3" align="left">
             <a>任务管理</a>
@@ -333,40 +333,9 @@ export default defineComponent({
 
 <style scoped>
 
-.el-button-right{
-  min-height: 25px;
-  width: 70px;
-}
-
-.el-table{
-  margin-left: 32px;
-  margin-right: 32px;
-  width: auto;
-}
-
-.demo-shadow {
-  height: auto;
-  border: 1px solid var(--el-border-color-base);
-  margin: 16px;
-  box-shadow: 0 12px 14px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04)
-}
-
-.box-header{
-  height: 60px;
-  align-items: center;
-}
-
-.box-header a{
-}
-
 .el-button-add{
   height: 20px;
   width: 150px;
-}
-
-.el-divider{
-  margin-top: 0px;
-  margin-bottom: 16px;
 }
 
 </style>

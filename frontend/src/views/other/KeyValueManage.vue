@@ -4,7 +4,7 @@
                   class="demo-shadow">
 
       <el-header style="height:auto;" >
-        <el-row class="box-header" type="flex" justify="space-between">
+        <el-row type="flex" justify="space-between">
 
           <el-col :span="3" align="left">
             <a>友盟键值对管理</a>
@@ -18,7 +18,7 @@
       </el-header>
       <el-divider ></el-divider>
 
-      <el-table :data="tableData" v-show="tableData.length > 0">
+      <el-table :data="tableData" v-show="tableData.length > 0" style="width: unset;">
         <el-table-column prop="kv_name" label="显示名称" width="200" />
         <el-table-column prop="kv_key" label="key" width="300" />
         <el-table-column prop="kv_value" label="值" show-overflow-tooltip="true" width="700"/>
@@ -196,37 +196,6 @@ export default defineComponent({
 .el-button-right{
   min-height: 25px;
   width: 70px;
-}
-
-.el-table{
-  margin-left: 32px;
-  margin-right: 32px;
-  width: auto;
-}
-
-.demo-shadow {
-  height: auto;
-  border: 1px solid var(--el-border-color-base);
-  margin: 16px;
-  box-shadow: 0 12px 14px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04)
-}
-
-.box-header{
-  height: 60px;
-  align-items: center;
-}
-
-.box-header a{
-}
-
-.el-button-add{
-  height: 20px;
-  width: 100px;
-}
-
-.el-divider{
-  margin-top: 0px;
-  margin-bottom: 16px;
 }
 
 </style>
