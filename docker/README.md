@@ -31,6 +31,8 @@ docker run -d \
 -p 8000:8000 \
 -p 9001:9001 \
 --name umem \
+--pull=always \
+--restart always \
 -e LANG=C.UTF-8 \
 samge/umem:v1
 ```
