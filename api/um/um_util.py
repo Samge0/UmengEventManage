@@ -260,7 +260,7 @@ def query_app_list() -> (list, str, int):
                          or '5f69610ba4ae0a7f7d09d36d' in r.text
     if is_response_ok(r):
         if is_demo_data:
-            return [], '请先登录友盟账号并更新cookie的配置信息', 403
+            return [], '请先登录友盟账号并更新cookie的配置信息', 499
         _print_tip(f'获取友盟应用列表 成功：\n【响应结果】：{r.text[:LOG_LEN]}......')
         return get_eval_dict(r.text).get('data'), '获取成功', 200
     else:
@@ -656,7 +656,10 @@ def check_um_status(um_key: str):
     if is_response_ok(r):
         return True, '操作成功'
     else:
-        return False, get_fail_msg(um_key=um_key, r=r)
+        msg: str = (get_fail_msg(um_key=um_key, r=r) or '')\
+            .replace(um_key, '')\
+            .replace('重新登录', '重新登录友盟账号，获取并替换新的cookie')
+        return False, msg
 
 
 def get_fail_msg(um_key: str, r):

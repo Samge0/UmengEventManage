@@ -21,8 +21,8 @@ def check_um_status(um_key: str) -> HttpResponse:
         return None
     else:
         r = {
-            'code': 403,
-            'msg': msg or '操作失败',
+            'code': 499,
+            'msg': msg or '友盟连接状态异常，请尝试更新友盟cookie',
             'data': None
         }
         return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=CONTENT_TYPE_JSON)

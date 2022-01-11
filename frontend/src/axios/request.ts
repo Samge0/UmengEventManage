@@ -6,6 +6,12 @@ import router from "@/router";
 
 export class Request {
 
+  /**
+   * 统一处理请求结果
+   * @param res
+   * @param resolve
+   * @param reject
+   */
   static parseRes = (res: any, resolve: any, reject: any) => {
     console.log(res)
         if (res.data.code === 200) {
@@ -15,6 +21,11 @@ export class Request {
             case 401:
             case 403:
                router.push('/login')
+               break
+
+            case 499:
+               // 友盟cookie失效，跳转去配置页面
+               router.push('/other/config')
                break
 
             default:
