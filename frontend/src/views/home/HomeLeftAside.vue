@@ -3,11 +3,17 @@
     <el-aside width="180px" v-if="currPath != '/login'" style="text-align: left;">
 
 <!--      登录账号-->
-      <el-dropdown size="mini" split-button type="primary" style="padding-left: 20px; padding-bottom: 10px;">
+      <el-dropdown
+          size="mini"
+          split-button="true"
+          type="primary"
+          placement="bottom-end"
+          trigger="click"
+          style="padding-left: 20px; padding-bottom: 0px;">
         <i class="el-icon-info"/> {{u_name}}
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item @click="loginOut">登出</el-dropdown-item>
+            <el-dropdown-item @click="loginOut" icon="el-icon-back">退出登录</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -20,7 +26,7 @@
           :router="true"
           :default-active="currPath"
           @select = "selectMenu"
-          style="--el-menu-border-color:'#00000000'"
+          style="--el-menu-border-color:'#00000000'; margin-top: 10px;"
       >
       <el-menu-item
           v-for="item in items"
@@ -40,19 +46,21 @@ import router from "@/router";
 export default defineComponent({
 
   created() {
+    console.log(`created`);
   },
+
+  mounted(){
+    console.log(`mounted`);
+    this.parseNameInfo()
+  },
+
   watch:{
     // 监听路由变化
     $route(to: any, from: any){
       console.log(`$route 路由发生变化 ${to} ${from}`);
-        this.currPath = to.path
-        console.log(`this.currPath = ${this.currPath}`)
-
-        let name = localStorage.getItem('u_name') || ''
-        if(name.length > 7){
-          name = `${name.substr(0, 3)}...${name.substr(name.length-2, name.length)}`
-        }
-        this.u_name = name
+      this.currPath = to.path
+      console.log(`this.currPath = ${this.currPath}`)
+      this.parseNameInfo()
     }
   },
 
@@ -95,6 +103,17 @@ export default defineComponent({
     })
 
     /**
+     * 处理登录名的显示
+     */
+    const parseNameInfo =()=>{
+      let name = localStorage.getItem('u_name') || ''
+        if(name.length > 7){
+          name = `${name.substr(0, 3)}...${name.substr(name.length-2, name.length)}`
+        }
+        state.u_name = name
+    }
+
+    /**
      * 菜单切换
      */
     const selectMenu = (index: any, indexPath: any) => {
@@ -115,6 +134,7 @@ export default defineComponent({
       ...toRefs(state),
       selectMenu,
       loginOut,
+      parseNameInfo,
     }
   },
 })
