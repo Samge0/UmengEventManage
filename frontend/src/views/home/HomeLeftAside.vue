@@ -1,6 +1,6 @@
 <template>
 <!--        左侧栏-->
-    <el-aside width="180px" v-if="currPath != '/login'" style="text-align: left;">
+    <el-aside width="180px" v-if="showLeftMenu" style="text-align: left;">
 
 <!--      登录账号-->
       <el-dropdown
@@ -52,6 +52,7 @@ export default defineComponent({
   mounted(){
     console.log(`mounted`);
     this.parseNameInfo()
+    this.checkCurrPathByUrl()
   },
 
   watch:{
@@ -61,11 +62,13 @@ export default defineComponent({
       this.currPath = to.path
       console.log(`this.currPath = ${this.currPath}`)
       this.parseNameInfo()
+      this.checkCurrPathByUrl()
     }
   },
 
   setup() {
     const state = reactive({
+      showLeftMenu: true,
       u_name: '登录',
       currPath: "/home",
       items: [
@@ -130,11 +133,26 @@ export default defineComponent({
         router.push('/login')
      }
 
+    /**
+     * 通过location.href检测当前path，避免某些时候没有及时显示左侧栏菜单
+     */
+    const checkCurrPathByUrl = () =>{
+        let isLoginPager = window.location.href.indexOf('/login') != -1
+        if(state.showLeftMenu && isLoginPager){
+            console.log('checkCurrPathByUrl 在登录页面，需要隐藏左侧菜单');
+            state.showLeftMenu = false
+        }else if(!state.showLeftMenu && !isLoginPager){
+            console.log('checkCurrPathByUrl 不在登录页面，需要显示左侧菜单');
+            state.showLeftMenu = true
+        }
+     }
+
     return {
       ...toRefs(state),
       selectMenu,
       loginOut,
       parseNameInfo,
+      checkCurrPathByUrl,
     }
   },
 })

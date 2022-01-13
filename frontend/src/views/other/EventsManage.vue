@@ -113,16 +113,16 @@
                  :model="filterForm"
                  label-width="120px"
                  label-position="right"
-                 style="margin-right: 40px; margin-top: 30px"
+                 style="margin-right: 40px; margin-top: 10px"
         >
 
-          <el-form-item label="关键词">
-            <el-input v-model="filterForm.keyword"></el-input>
+          <el-form-item label="关键词" size="mini">
+            <el-input v-model="filterForm.keyword" class="el-input-filter" style="width: 100%;height: 35px;" size="small"></el-input>
           </el-form-item>
 
-          <el-form-item label="事件状态">
+          <el-form-item label="事件状态" size="mini">
             <el-col>
-              <el-select v-model="filterForm.state" placeholder="请选择事件状态">
+              <el-select v-model="filterForm.state" placeholder="请选择事件状态" class="el-select-filter" size="small">
                 <el-option label="不限状态" value=""></el-option>
                 <el-option label="有效事件" value="normal"></el-option>
                 <el-option label="暂停事件" value="stopped"></el-option>
@@ -130,9 +130,9 @@
             </el-col>
           </el-form-item>
 
-          <el-form-item label="事件类型" >
+          <el-form-item label="事件类型" size="mini">
             <el-col>
-              <el-select v-model="filterForm.type" placeholder="请选择事件类型">
+              <el-select v-model="filterForm.type" placeholder="请选择事件类型" class="el-select-filter" size="small">
                 <el-option label="不限类型" value=""></el-option>
                 <el-option label="多参数类型事件" value="0"></el-option>
                 <el-option label="计算事件" value="1"></el-option>
@@ -140,9 +140,9 @@
             </el-col>
           </el-form-item>
 
-          <el-form-item label="排序字段">
+          <el-form-item label="排序字段" size="mini">
             <el-col>
-              <el-select v-model="filterForm.order_by" placeholder="请选择排序字段">
+              <el-select v-model="filterForm.order_by" placeholder="请选择排序字段" class="el-select-filter" size="small">
                 <el-option label="事件id" value="um_name"></el-option>
                 <el-option label="事件名称" value="um_displayName"></el-option>
                 <el-option label="昨日消息数" value="um_countYesterday"></el-option>
@@ -152,46 +152,46 @@
             </el-col>
           </el-form-item>
 
-          <el-form-item label="排序方式">
+          <el-form-item label="排序方式" size="mini">
             <el-col>
-              <el-select v-model="filterForm.order" placeholder="请选择排序方式">
+              <el-select v-model="filterForm.order" placeholder="请选择排序方式" class="el-select-filter" size="small">
                 <el-option label="降序" value="desc"></el-option>
                 <el-option label="升序" value="asc"></el-option>
               </el-select>
             </el-col>
           </el-form-item>
 
-          <el-form-item label="昨日数量">
+          <el-form-item label="昨日数量" size="mini">
             <el-col>
               <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.yesterday_min" label="昨日数量" placeholder="最小值"/> ~
               <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.yesterday_max" placeholder="最大值"/>
             </el-col>
           </el-form-item>
 
-          <el-form-item label="今日数量">
+          <el-form-item label="今日数量" size="mini">
             <el-col>
               <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.today_min" label="昨日数量" placeholder="最小值"/> ~
               <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.today_max" placeholder="最大值"/>
             </el-col>
           </el-form-item>
 
-          <el-form-item label="用户数量">
+          <el-form-item label="用户数量" size="mini">
             <el-col>
               <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.device_min" label="昨日数量" placeholder="最小值"/> ~
               <el-input-number class="el-input-filter" size="small" v-model="filterForm.count_limit.device_max" placeholder="最大值"/>
             </el-col>
           </el-form-item>
 
-          <el-form-item label="数量筛选">
+          <el-form-item label="数量筛选" size="mini">
             <el-col>
-              <el-button @click="queryAllZeroEvent" size="mini">查询所有数量为 0 的事件</el-button>
+              <el-button @click="queryAllZeroEvent" size="small">查询所有数量为 0 的事件</el-button>
             </el-col>
           </el-form-item>
 
-          <el-form-item>
-            <el-button class="el-button-filter" @click="onFilterReset">重置</el-button>
-            <el-button class="el-button-filter" type="primary" @click="onFilterSubmit">提交</el-button>
-          </el-form-item>
+          <div style="display:flex;align-items: flex-start;margin-left: 50px">
+            <el-button class="el-button-filter" @click="onFilterReset" size="small">重置</el-button>
+            <el-button class="el-button-filter" type="primary" @click="onFilterSubmit" size="small">提交</el-button>
+          </div>
 
         </el-form>
 
@@ -490,12 +490,21 @@ export default defineComponent({
 <style scoped>
 
 .el-button-filter{
-  width: 150px;
-  margin-top: 40px;
+  width: 100px;
+  height: 35px;
+  margin-top: 0px;
 }
 
 .el-input-filter{
   width: 130px;
+  height: 35px;
+  margin-top: 0px;
+}
+
+.el-select-filter{
+  width: 100%;
+  height: 35px;
+  margin-top: 0px;
 }
 
 </style>
