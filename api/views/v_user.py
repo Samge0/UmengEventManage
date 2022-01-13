@@ -136,25 +136,28 @@ def login(request):
     if not u_name or not u_pw:
         code, msg, data = 400, '用户名、密码不能为空', None
     else:
-        user: User = get_user(u_name=u_name, u_pw=u_pw)
-        if not user:
-            code, msg, data = 400, '登录失败', None
+        if not is_exist_user(u_name=u_name, u_phone=u_name, u_email=u_name):
+            code, msg, data = 400, '账号不存在', None
         else:
-            # 更新token & 最后登录时间
-            u_id: str = user.u_id
-            u_token: str = create_token(u_id=u_id)
-            user.u_token = u_token
-            user.u_last_time = timezone.now()
-            user.save(force_update=True)
+            user: User = get_user(u_name=u_name, u_pw=u_pw)
+            if not user:
+                code, msg, data = 400, '密码错误', None
+            else:
+                # 更新token & 最后登录时间
+                u_id: str = user.u_id
+                u_token: str = create_token(u_id=u_id)
+                user.u_token = u_token
+                user.u_last_time = timezone.now()
+                user.save(force_update=True)
 
-            data: dict = {
-                'u_id': user.u_id,
-                'u_name': user.u_name,
-                'u_email': user.u_email,
-                'u_phone': user.u_phone,
-                'u_token': u_token,
-            }
-            code, msg, data = 200, '登录成功', data
+                data: dict = {
+                    'u_id': user.u_id,
+                    'u_name': user.u_name,
+                    'u_email': user.u_email,
+                    'u_phone': user.u_phone,
+                    'u_token': u_token,
+                }
+                code, msg, data = 200, '登录成功', data
 
     r = {
         'code': code,
