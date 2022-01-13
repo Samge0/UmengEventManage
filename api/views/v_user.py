@@ -4,6 +4,7 @@
 # @Author  : Samge
 import json
 import random
+import re
 import time
 
 from django.core import signing
@@ -18,6 +19,11 @@ from api.utils.u_json import DateEncoder
 
 # 测试用的验证码，没做真实发送验证码动作
 TEST_V_CODE = '666666'
+
+# 邮件检测规则
+PATTERN_EMAIL = re.compile(r"^[a-z0-9][\w.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$")
+# 电话检测规则
+PATTERN_PHONE = re.compile(r"^1\d{10}")
 
 
 def is_exist_user(u_id: str = '', u_email: str = '', u_phone: str = '', u_name: str = ''):
@@ -84,6 +90,24 @@ def create_token(u_id: str) -> str:
     return signing.dumps(v)
 
 
+def check_email(v: str) -> bool:
+    """
+    检测邮箱
+    :param v:
+    :return:
+    """
+    return re.match(PATTERN_EMAIL, v) is not None
+
+
+def check_phone(v: str) -> bool:
+    """
+    检测手机号
+    :param v:
+    :return:
+    """
+    return re.match(PATTERN_PHONE, v) is not None
+
+
 @require_http_methods(["POST"])
 def reg(request):
     post_body = json.loads(request.body)
@@ -93,8 +117,10 @@ def reg(request):
     u_name = post_body.get('u_name') or u_phone or u_email
     u_pw = post_body.get('u_pw') or ""
 
-    if not u_email and not u_phone:
-        code, msg, data = 400, '账号不能为空', None
+    if u_email and not check_email(u_email):
+        code, msg, data = 400, '请输入有效的邮箱账号', None
+    elif u_phone and not check_phone(u_phone):
+        code, msg, data = 400, '请输入有效的手机号码', None
     elif not u_code or not u_pw:
         code, msg, data = 400, '验证码、密码不能为空', None
     elif len(u_pw) < 6:
