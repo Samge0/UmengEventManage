@@ -1,13 +1,13 @@
 import json
-from django.http import HttpResponse
+
+from django.db.models import Q
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
-from api.utils import u_config, u_http
-from api.utils.u_check import check_login
-from api.utils.u_json import DateEncoder
 from api.models import UmKey, KeyValue
 from api.um import um_util
+from api.utils import u_config, u_http, u_md5
+from api.utils.u_check import check_login
 
 
 @require_http_methods(["GET"])
@@ -23,20 +23,24 @@ def index(request):
 @require_http_methods(["GET"])
 @check_login
 def get_um_apps(request):
-    u_config.parse_config(None)
+    u_id: str = u_http.get_uid(request)
+
+    u_config.parse_config(u_id=u_id, config=None)
     lst, msg, code = um_util.query_app_list()
-    r = {
-        'code': code,
-        'msg': msg,
-        'data': list(lst)
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    r = u_http.get_r_dict(
+        code=code,
+        msg=msg,
+        data=list(lst)
+    )
+    return u_http.get_json_response(r)
 
 
 @check_login
 @require_http_methods(["POST"])
 def get_um_keys(request):
-    u_config.parse_config(None)
+    u_id: str = u_http.get_uid(request)
+
+    u_config.parse_config(u_id=u_id, config=None)
     post_body = json.loads(request.body)
     um_status: int = post_body.get('um_status') or -1
     refresh: bool = post_body.get('refresh') or False
@@ -46,40 +50,49 @@ def get_um_keys(request):
     if refresh:
         lst_app, msg, code = um_util.query_app_list()
         if code != 200:
-            r = {
-                'code': code,
-                'msg': msg,
-                'data': None
-            }
-            return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+            r = u_http.get_r_dict(
+                code=code,
+                msg=msg,
+                data=None
+            )
+            return u_http.get_json_response(r)
         for _app in lst_app:
             um_key: str = _app.get('relatedId')
+            um_md5: str = u_md5.get_um_key_md5(u_id=u_id, um_key=um_key)
             um_name: str = f"【{_app.get('platform')}】{_app.get('name')}"
-            keys = UmKey.objects.filter(um_key=um_key)
+            keys = UmKey.objects.filter(um_md5=um_md5)
             force_update: bool = True if keys and len(keys) > 0 else False
             if force_update:
                 key = keys[0]
                 if reset_name:
                     key.um_name = um_name
             else:
-                key = UmKey(um_key=um_key, um_name=um_name, um_master=False)
+                key = UmKey(
+                    um_md5=um_md5,
+                    u_id=u_id,
+                    um_key=um_key,
+                    um_name=um_name,
+                    um_master=False
+                )
             key.save(force_update=force_update)
     # 重新查数据库
+    _filter: Q = Q(u_id=u_id)
     if um_status >= 0:
-        lst = list(UmKey.objects.filter(um_status=um_status).values() or [])
-    else:
-        lst = list(UmKey.objects.filter().values() or [])
-    r = {
-        'code': 200,
-        'msg': 'success',
-        'data': lst
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+        _filter = _filter & Q(um_status=um_status)
+    lst = list(UmKey.objects.filter(_filter).values() or [])
+    r = u_http.get_r_dict(
+        code=200,
+        msg='success',
+        data=lst
+    )
+    return u_http.get_json_response(r)
 
 
 @check_login
 @require_http_methods(["POST"])
 def add_um_key(request):
+    u_id: str = u_http.get_uid(request)
+
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
     um_name: str = post_body.get('um_name') or um_key
@@ -87,13 +100,14 @@ def add_um_key(request):
     um_status: int = post_body.get('um_status') or 0
 
     if not um_key:
-        r = {
-            'code': 200,
-            'msg': 'um_key不能为空',
-            'data': None
-        }
+        r = u_http.get_r_dict(
+            code=200,
+            msg='um_key不能为空',
+            data=None
+        )
     else:
-        keys = UmKey.objects.filter(um_key=um_key)
+        um_md5: str = u_md5.get_um_key_md5(u_id=u_id, um_key=um_key)
+        keys = UmKey.objects.filter(um_md5=um_md5)
         force_update: bool = True if keys and len(keys) > 0 else False
 
         # 保存/更新入库
@@ -104,7 +118,14 @@ def add_um_key(request):
             key.um_status = um_status
             msg: str = '更新成功'
         else:
-            key = UmKey(um_key=um_key, um_name=um_name, um_master=um_master, um_status=um_status)
+            key = UmKey(
+                um_md5=um_md5,
+                u_id=u_id,
+                um_key=um_key,
+                um_name=um_name,
+                um_master=um_master,
+                um_status=um_status
+            )
             msg: str = '保存成功'
         key.save(force_update=force_update)
 
@@ -115,70 +136,86 @@ def add_um_key(request):
                 key.save(force_update=True)
 
         # 查询列表返回
-        r = {
-            'code': 200,
-            'msg': msg,
-            'data': list(UmKey.objects.filter(um_status=1).values())
-        }
-        update_um_key_cache(r.get('data'))
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+        r = u_http.get_r_dict(
+            code=200,
+            msg=msg,
+            data=get_key_list(u_id=u_id, um_status=1)
+        )
+        update_um_key_cache(u_id=u_id, lst=r.get('data'))
+    return u_http.get_json_response(r)
+
+
+def get_key_list(u_id: str, um_status: int) -> list:
+    """
+    获取某个用户保存的友盟keys
+    :param u_id:
+    :param um_status:
+    :return:
+    """
+    _filter: Q = Q(u_id=u_id) & Q(um_status=um_status)
+    return list(UmKey.objects.filter(_filter).values())
 
 
 @check_login
 @require_http_methods(["POST"])
 def del_um_key(request):
+    u_id: str = u_http.get_uid(request)
+
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
 
     if not um_key:
-        r = {
-            'code': 200,
-            'msg': '删除失败，要删除的数据找不到',
-            'data': list(UmKey.objects.filter().values())
-        }
+        r = u_http.get_r_dict(
+            code=200,
+            msg='删除失败，要删除的数据找不到',
+            data=list(UmKey.objects.filter().values())
+        )
     else:
-        h = UmKey.objects.get(um_key=um_key)
+        um_md5: str = u_md5.get_um_key_md5(u_id=u_id, um_key=um_key)
+        h = UmKey.objects.get(um_md5=um_md5)
         h.delete()
-        r = {
-            'code': 200,
-            'msg': '删除成功',
-            'data': list(UmKey.objects.filter(um_status=1).values())
-        }
-        update_um_key_cache(r.get('data'))
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+        r = u_http.get_r_dict(
+            code=200,
+            msg='删除成功',
+            data=get_key_list(u_id=u_id, um_status=1)
+        )
+        update_um_key_cache(u_id=u_id, lst=r.get('data'))
+    return u_http.get_json_response(r)
 
 
 @check_login
 @require_http_methods(["POST"])
 def um_key_master(request):
+    u_id: str = u_http.get_uid(request)
+
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
     um_master: bool = post_body.get('um_master') or False
     if not um_key:
-        r = {
-            'code': 200,
-            'msg': '设置失败，要设置的数据找不到',
-            'data': list(UmKey.objects.filter().values())
-        }
+        r = u_http.get_r_dict(
+            code=400,
+            msg='设置失败，要设置的数据找不到',
+            data=None
+        )
     else:
-        for key in UmKey.objects.filter() or []:
-            if key.um_key == um_key:
-                key.um_master = um_master
-            else:
-                key.um_master = False
-            key.save(force_update=True)
-        r = {
-            'code': 200,
-            'msg': '设置成功',
-            'data': list(UmKey.objects.filter(um_status=1).values())
-        }
-        update_um_key_cache(r.get('data'))
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+        _filter: Q = Q(u_id=u_id)
+        UmKey.objects.filter(_filter & ~Q(um_key=um_key)).update(um_master=False)
+        UmKey.objects.filter(_filter & Q(um_key=um_key)).update(um_master=um_master)
+        r = u_http.get_r_dict(
+            code=200,
+            msg='设置成功',
+            data=get_key_list(u_id=u_id, um_status=1)
+        )
+        update_um_key_cache(u_id=u_id, lst=r.get('data'))
+    return u_http.get_json_response(r)
 
 
-def update_um_key_cache(lst):
+def update_um_key_cache(u_id: str, lst: list):
     """
     读取最新主从的友盟key，存入数据库
+    :param u_id:
+    :param lst:
+    :return:
     """
     UM_KEY_MASTER = ''
     UM_KEY_SLAVES = []
@@ -191,15 +228,16 @@ def update_um_key_cache(lst):
             UM_KEY_MASTER = um_key
         else:
             UM_KEY_SLAVES.append(um_key)
-    update_um_key_cache_to_db('UM_KEY_MASTER', UM_KEY_MASTER)
-    update_um_key_cache_to_db('UM_KEY_SLAVES', '|'.join(UM_KEY_SLAVES))
+    update_um_key_cache_to_db(u_id, 'UM_KEY_MASTER', UM_KEY_MASTER)
+    update_um_key_cache_to_db(u_id, 'UM_KEY_SLAVES', '|'.join(UM_KEY_SLAVES))
 
 
-def update_um_key_cache_to_db(kv_key, kv_value):
+def update_um_key_cache_to_db(u_id: str, kv_key, kv_value):
     """
     将友盟key存入键值对数据库
     """
-    keys = KeyValue.objects.filter(kv_key=kv_key)
+    kv_md5: str = u_md5.get_kv_md5(u_id=u_id, kv_key=kv_key)
+    keys = KeyValue.objects.filter(kv_md5=kv_md5)
     force_update: bool = True if keys and len(keys) > 0 else False
 
     # 保存/更新入库
@@ -210,7 +248,13 @@ def update_um_key_cache_to_db(kv_key, kv_value):
         key.kv_status = True
         # msg: str = '更新成功'
     else:
-        key = KeyValue(kv_key=kv_key, kv_name='', kv_value=kv_value, kv_status=True)
+        key = KeyValue(kv_md5=kv_md5,
+                       u_id=u_id,
+                       kv_key=kv_key,
+                       kv_name='',
+                       kv_value=kv_value,
+                       kv_status=True
+                       )
         # msg: str = '保存成功'
     key.save(force_update=force_update)
 

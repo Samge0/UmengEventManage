@@ -9,13 +9,11 @@ import time
 
 from django.core import signing
 from django.db.models import Q
-from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
+
 from api.models import User
 from api.utils import u_http
-from api.utils.u_json import DateEncoder
-
 
 # 测试用的验证码，没做真实发送验证码动作
 TEST_V_CODE = '666666'
@@ -145,12 +143,12 @@ def reg(request):
                 'u_token': u_token,
             }
             code, msg, data = 200, '注册成功', data
-    r = {
-        'code': code,
-        'msg': msg,
-        'data': data
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    r = u_http.get_r_dict(
+        code=code,
+        msg=msg,
+        data=data
+    )
+    return u_http.get_json_response(r)
 
 
 @require_http_methods(["POST"])
@@ -184,10 +182,9 @@ def login(request):
                     'u_token': u_token,
                 }
                 code, msg, data = 200, '登录成功', data
-
-    r = {
-        'code': code,
-        'msg': msg,
-        'data': data
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    r = u_http.get_r_dict(
+        code=code,
+        msg=msg,
+        data=data
+    )
+    return u_http.get_json_response(r)

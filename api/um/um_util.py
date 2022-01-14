@@ -16,6 +16,9 @@ true = True
 false = False
 null = None
 
+# 当前登录的用户id
+u_id = None
+
 # 友盟的socket通讯对象
 um_socks = None
 # 请求头
@@ -727,8 +730,10 @@ def get_temp_file_dir():
     """
     获取临时文件的目录
     """
-    return f'{os.path.dirname(os.path.realpath(__file__))}/temp_files'
-    # return f'./temp_files'
+    path: str = f'{os.path.dirname(os.path.realpath(__file__))}/temp_files/{u_id or 0}'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
 
 
 def get_eval_dict(txt: str):

@@ -26,8 +26,10 @@ class UmKey(models.Model):
     友盟key的model
     """
     indexes = [
-        models.Index(fields=['um_key']),  # 单索引
+        models.Index(fields=['um_md5']),  # 单索引
     ]
+    u_id = models.CharField(max_length=11, default="")
+    um_md5 = models.CharField(max_length=128)
     um_key = models.CharField(max_length=128)
     um_name = models.CharField(max_length=20)
     um_master = models.BooleanField(default=False)
@@ -35,7 +37,7 @@ class UmKey(models.Model):
     um_add_time = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return self.um_key
+        return self.um_md5
 
 
 class KeyValue(models.Model):
@@ -43,8 +45,10 @@ class KeyValue(models.Model):
     键值对管理的model
     """
     indexes = [
-        models.Index(fields=['kv_key']),  # 单索引
+        models.Index(fields=['kv_md5']),  # 单索引
     ]
+    u_id = models.CharField(max_length=11, default="")
+    kv_md5 = models.CharField(max_length=128)
     kv_name = models.CharField(max_length=128, default="")
     kv_key = models.CharField(max_length=128)
     kv_value = models.CharField(max_length=5000)
@@ -52,7 +56,7 @@ class KeyValue(models.Model):
     kv_add_time = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return self.kv_key
+        return self.kv_md5
 
 
 class UmEventModel(models.Model):
@@ -62,6 +66,7 @@ class UmEventModel(models.Model):
     indexes = [
         models.Index(fields=['um_md5']),  # 单索引
     ]
+    u_id = models.CharField(max_length=11, default="")
     um_md5 = models.CharField(max_length=128)
     um_key = models.CharField(max_length=128)
     um_eventId = models.CharField(max_length=128)

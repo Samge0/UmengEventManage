@@ -138,23 +138,25 @@ export default defineComponent({
      */
     const stopTask = () => {
       state.taskType = ''
-      websocketSend({'type': 'stop', 'config': state.umConfig})
+      let data = {
+          'type': 'stop',
+          'config': state.umConfig
+        }
+      websocketSend(data)
     }
 
     /**
      * 点击执行 友盟同步任务
      */
     const startSynTask = () => {
-      state.taskType = 'syn'
-      startTask(state.taskType)
+      startTask('syn')
     }
 
     /**
      * 点击执行 友盟添加/更新自定义事件的任务
      */
     const startUpdateTask = () => {
-      state.taskType = 'update'
-      startTask(state.taskType)
+      startTask('update')
     }
 
     /**
@@ -197,13 +199,17 @@ export default defineComponent({
      */
     const websocketOnOpen = () => {
         console.log('websocketOnOpen');
-        websocketSend({'type': 'connect', 'config': state.umConfig})
+        let data = {
+          'type': 'connect',
+          'config': state.umConfig
+        }
+        websocketSend(data)
         if(state.taskType != null && state.taskType != ''){
-          let data = {
+          let data2 = {
             'type': state.taskType,
             'config': state.umConfig
           }
-          websocketSend(data)
+          websocketSend(data2)
         }
     }
 

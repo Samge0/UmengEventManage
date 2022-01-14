@@ -2,49 +2,36 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/12/3 下午4:29
 # @Author  : Samge
-import hashlib
 import json
 import os
 import time
 
 from django.db.models import Q
-from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from api.utils import u_config, u_http
-from api.utils.u_check import check_login
-from api.utils.u_json import DateEncoder
 from api.models import UmEventModel
 from api.um import um_tasks, um_util
-
-
-def get_event_md5(um_eventId: str, curr_date: str):
-    """
-    获取友盟自定义事件的md5值
-        根据 事件id && 当前日期 生成md5值
-    :param um_eventId:
-    :param curr_date:
-    :return:
-    """
-    md5_value: str = f"{um_eventId}{curr_date}"
-    return hashlib.md5(md5_value.encode(encoding='utf-8')).hexdigest()
+from api.utils import u_config, u_http, u_md5
+from api.utils.u_check import check_login
 
 
 @check_login
 @require_http_methods(["POST"])
 def um_event_op(request):
     """
-    暂停友盟自定义事件
+    暂停/恢复 友盟自定义事件
     op_type : 0=暂停，1=恢复
     :param request:
     :return:
     """
+    u_id: str = u_http.get_uid(request)
+
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
     op_type: int = post_body.get('op_type') or 0
     ids: list = post_body.get('ids') or []
 
-    u_config.parse_config(None)
+    u_config.parse_config(u_id=u_id, config=None)
 
     # 判断友盟key
     check_result_response = u_http.check_um_key(um_key=um_key)
@@ -69,12 +56,12 @@ def um_event_op(request):
     else:
         um_util.event_restore(um_key=um_key, ids=ids)
         UmEventModel.objects.filter(_filter).update(um_status='normal')
-    r = {
-        'code': 200,
-        'msg': '操作成功',
-        'data': None
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    r = u_http.get_r_dict(
+        code=200,
+        msg='操作成功',
+        data=None
+    )
+    return u_http.get_json_response(r)
 
 
 @check_login
@@ -85,6 +72,8 @@ def um_event(request):
     :param request:
     :return:
     """
+    u_id: str = u_http.get_uid(request)
+
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
     refresh: bool = post_body.get('refresh') == 1
@@ -94,7 +83,7 @@ def um_event(request):
     pg_start = (pg_index-1)*pg_size
     pg_end = pg_size*pg_index
 
-    u_config.parse_config(None)
+    u_config.parse_config(u_id=u_id, config=None)
 
     # 判断友盟key
     check_result_response = u_http.check_um_key(um_key=um_key)
@@ -108,39 +97,40 @@ def um_event(request):
             return check_result_response
 
     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    results: list = get_events_from_db(um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
+    results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
 
     if need_refresh:
         results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
         # 将新结果插入数据库
-        insert_event(results=results)
+        insert_event(u_id=u_id, results=results)
         # 重新查询数据库
-        results: list = get_events_from_db(um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
+        results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     else:
         print('数据库已有数据，直接读取数据库的数据')
 
-    r = {
-        'code': 200,
-        'msg': '查询成功',
-        'data': {
+    r = u_http.get_r_dict(
+        code=200,
+        msg='查询成功',
+        data={
             'lst': results[pg_start:pg_end],
             'total': len(results)
         }
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    )
+    return u_http.get_json_response(r)
 
 
-def insert_event(results: list):
+def insert_event(u_id: str, results: list):
     """
     将友盟自定义事件插入数据库
+    :param u_id:
     :param results:
     :return:
     """
     print('将友盟自定义事件插入数据库')
     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     for item in results or []:
-        um_md5: str = get_event_md5(item.get('um_eventId'), curr_date)
+        um_md5: str = u_md5.get_event_md5(u_id, item.get('um_eventId'), curr_date)
         events = UmEventModel.objects.filter(um_md5=um_md5)
         force_update: bool = True if events and len(events) > 0 else False
 
@@ -150,6 +140,7 @@ def insert_event(results: list):
         else:
             key = UmEventModel(um_md5=um_md5)
 
+        key.u_id = u_id
         key.um_key = item.get('um_key')
         key.um_eventId = item.get('um_eventId')
         key.um_name = item.get('um_name')
@@ -164,7 +155,7 @@ def insert_event(results: list):
     print('入库完成')
 
 
-def get_events_from_db(um_key: str, curr_date: str, filter_dict: dict):
+def get_events_from_db(u_id: str, um_key: str, curr_date: str, filter_dict: dict):
     """
     从数据库中获取某一天的友盟自定义事件列表
 
@@ -187,10 +178,14 @@ def get_events_from_db(um_key: str, curr_date: str, filter_dict: dict):
     __year 日期字段的年份
     __month 日期字段的月份
     __day 日期字段的日
+
+    不等于/不包含于：
+        XXX.objects.filter().excute(age=10) // 查询年龄不为10的学生
+        XXX.objects.filter().excute(age__in=[10, 20]) // 查询年龄不在 [10, 20] 的学生
     :return:
     """
     order_by: str = None
-    _filter: Q = Q(um_key=um_key) & Q(um_date=curr_date)
+    _filter: Q = Q(u_id=u_id) & Q(um_key=um_key) & Q(um_date=curr_date)
     if filter_dict and len(filter_dict or {}) > 0:
         print(f"存在筛选条件，进行筛选查询：{filter_dict}")
 
@@ -271,11 +266,13 @@ def um_event_export(request):
     :param request:
     :return:
     """
+    u_id: str = u_http.get_uid(request)
+
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
     refresh: bool = post_body.get('refresh') == 1
 
-    u_config.parse_config(None)
+    u_config.parse_config(u_id=u_id, config=None)
 
     # 判断友盟key
     check_result_response = u_http.check_um_key(um_key=um_key)
@@ -294,12 +291,12 @@ def um_event_export(request):
             txt = f"{txt}\n{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
         else:
             txt = f"{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
-    r = {
-        'code': 200,
-        'msg': '查询成功',
-        'data': txt
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    r = u_http.get_r_dict(
+        code=200,
+        msg='查询成功',
+        data=txt
+    )
+    return u_http.get_json_response(r)
 
 
 @check_login
@@ -310,8 +307,10 @@ def um_event_import(request):
     :param request:
     :return:
     """
+    u_id: str = u_http.get_uid(request)
+
     um_key: str = ''.join(request.POST.values()) if request.POST else ""
-    
+
     # 判断友盟key
     check_result_response = u_http.check_um_key(um_key=um_key)
     if check_result_response:
@@ -323,12 +322,12 @@ def um_event_import(request):
         return check_result_response
 
     code, msg = handle_uploaded_file(um_key=um_key, f=request.FILES['file'])
-    r = {
-        'code': code,
-        'msg': msg,
-        'data': None
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    r = u_http.get_r_dict(
+        code=code,
+        msg=msg,
+        data=None
+    )
+    return u_http.get_json_response(r)
 
 
 @check_login
@@ -339,14 +338,16 @@ def um_event_update(request):
     :param request:
     :return:
     """
+    u_id: str = u_http.get_uid(request)
+
     um_key: str = ''.join(request.POST.values()) if request.POST else ""
     code, msg = handle_update_file(um_key=um_key, f=request.FILES['file'])
-    r = {
-        'code': code,
-        'msg': msg,
-        'data': None
-    }
-    return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+    r = u_http.get_r_dict(
+        code=code,
+        msg=msg,
+        data=None
+    )
+    return u_http.get_json_response(r)
 
 
 def handle_uploaded_file(um_key: str, f):

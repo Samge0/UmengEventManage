@@ -6,9 +6,8 @@ import json
 
 from channels.generic.websocket import WebsocketConsumer
 
-
-from api.utils import u_config
 from api.um import um_tasks, um_util
+from api.utils import u_config
 
 
 class UmConsumer(WebsocketConsumer):
@@ -17,7 +16,8 @@ class UmConsumer(WebsocketConsumer):
     """
 
     def connect(self):
-        print(f"UmConsumer connect 成功连接")
+        self.u_id = self.scope['url_route']['kwargs']['u_id']
+        print(f"UmConsumer connect 成功连接： {self.u_id}")
         self.accept()
         um_util.stop = False
 
@@ -44,26 +44,31 @@ class UmConsumer(WebsocketConsumer):
             return
 
         if 'syn' == msg_type:
-            u_config.parse_config(config)
+            u_config.parse_config(u_id=self.u_id, config=config)
             if not is_bad_um_status(self, config):
                 self.send(f"开始执行任务")
+                um_util.u_id = self.u_id
                 um_util.um_socks = self
                 um_tasks.do_um_synchro_task()
                 self.send(f"任务完成")
 
         elif 'update' == msg_type:
-            u_config.parse_config(config)
+            u_config.parse_config(u_id=self.u_id, config=config)
             if not is_bad_um_status(self, config):
                 self.send(f"开始执行任务")
+                um_util.u_id = u_id
                 um_util.um_socks = self
                 um_tasks.do_add_or_update_task()
                 self.send(f"任务执行完毕")
 
         elif 'stop' == msg_type:
+            um_util.u_id = None
+            um_util.um_socks = None
             um_util.stop = True
             self.send(f"断开上一个连接")
 
         elif 'connect' == msg_type:
+            um_util.u_id = self.u_id
             self.send(f"已连接")
 
         else:
