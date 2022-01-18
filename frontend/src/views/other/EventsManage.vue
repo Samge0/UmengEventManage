@@ -89,10 +89,11 @@
               :action="uploadUrl"
               :on-success="handleUploadSucceed"
               :file-list="fileList"
-              :show-file-list="false"
+              :data="query.um_key"
+              :headers="upload_headers"
+              show-file-list="false"
               multiple="false"
               drag="true"
-              :data="query.um_key"
             >
             <el-button size="mini" icon="el-icon-upload" style="background-color: transparent; border: 0px"></el-button>
             <div class="el-upload__text">
@@ -208,6 +209,7 @@ import { defineComponent, reactive, toRefs } from 'vue'
 import {saveAs} from "file-saver";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
+import router from "@/router";
 
 
 export default defineComponent({
@@ -217,6 +219,11 @@ export default defineComponent({
   },
   setup: function () {
     const state = reactive({
+
+      // 上传头加认证信息
+      upload_headers: {
+        'Authorization': localStorage.getItem("token"),
+      },
 
       filterForm: {
         keyword: '',
@@ -393,10 +400,17 @@ export default defineComponent({
       console.log(state.ids)
     }
 
-    // 文件上传成功
+    // 文件上传结果监听
     const handleUploadSucceed = (response: any, file: any, file_list: any) => {
       state.dialogFormVisible = false
       console.log(`handleUploadSucceed ${response}${file} ${file_list}`)
+      if(response.code != 200){
+        toast.showError(response.msg)
+      }
+      if(response.code == 401 || response.code == 403){
+        router.push('/login')
+        return
+      }
       toast.showSuccess('上传成功')
     }
 

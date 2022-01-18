@@ -7,12 +7,15 @@ import os
 import time
 
 from django.db.models import Q
+from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
 from api.models import UmEventModel
-from api.um import um_tasks, um_util
-from api.utils import u_config, u_http, u_md5
+from api.um import um_tasks
+from api.um.um_util import UmTask
+from api.utils import u_http, u_md5
 from api.utils.u_check import check_login
+from api.utils.u_json import DateEncoder
 
 
 @check_login
@@ -31,15 +34,13 @@ def um_event_op(request):
     op_type: int = post_body.get('op_type') or 0
     ids: list = post_body.get('ids') or []
 
-    u_config.parse_config(u_id=u_id, config=None)
-
     # 判断友盟key
-    check_result_response = u_http.check_um_key(um_key=um_key)
+    check_result_response = check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
-    check_result_response = u_http.check_um_status(um_key=um_key)
+    check_result_response = check_um_status(u_id=u_id, um_key=um_key)
     if check_result_response:
         return check_result_response
 
@@ -50,11 +51,13 @@ def um_event_op(request):
             _filter = Q(um_eventId=_id)
         else:
             _filter = _filter | Q(um_eventId=_id)
+
+    task: UmTask = UmTask(u_id=u_id, um_socks=None)
     if op_type == 0:
-        um_util.event_pause(um_key=um_key, ids=ids)
+        task.event_pause(um_key=um_key, ids=ids)
         UmEventModel.objects.filter(_filter).update(um_status='stopped')
     else:
-        um_util.event_restore(um_key=um_key, ids=ids)
+        task.event_restore(um_key=um_key, ids=ids)
         UmEventModel.objects.filter(_filter).update(um_status='normal')
     r = u_http.get_r_dict(
         code=200,
@@ -83,16 +86,14 @@ def um_event(request):
     pg_start = (pg_index-1)*pg_size
     pg_end = pg_size*pg_index
 
-    u_config.parse_config(u_id=u_id, config=None)
-
     # 判断友盟key
-    check_result_response = u_http.check_um_key(um_key=um_key)
+    check_result_response = check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
     if refresh:
-        check_result_response = u_http.check_um_status(um_key=um_key)
+        check_result_response = check_um_status(u_id=u_id, um_key=um_key)
         if check_result_response:
             return check_result_response
 
@@ -101,7 +102,7 @@ def um_event(request):
     need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
 
     if need_refresh:
-        results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
+        results: list = list(um_tasks.get_analysis_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
         # 将新结果插入数据库
         insert_event(u_id=u_id, results=results)
         # 重新查询数据库
@@ -272,19 +273,17 @@ def um_event_export(request):
     um_key: str = post_body.get('um_key')
     refresh: bool = post_body.get('refresh') == 1
 
-    u_config.parse_config(u_id=u_id, config=None)
-
     # 判断友盟key
-    check_result_response = u_http.check_um_key(um_key=um_key)
+    check_result_response = check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
-    check_result_response = u_http.check_um_status(um_key=um_key)
+    check_result_response = check_um_status(u_id=u_id, um_key=um_key)
     if check_result_response:
         return check_result_response
 
-    results: list = list(um_tasks.get_analysis_event_list(um_key=um_key, refresh=refresh))
+    results: list = list(um_tasks.get_analysis_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
     txt: str = None
     for item in results:
         if txt:
@@ -312,16 +311,16 @@ def um_event_import(request):
     um_key: str = ''.join(request.POST.values()) if request.POST else ""
 
     # 判断友盟key
-    check_result_response = u_http.check_um_key(um_key=um_key)
+    check_result_response = check_um_key(um_key=um_key)
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
-    check_result_response = u_http.check_um_status(um_key=um_key)
+    check_result_response = check_um_status(u_id=u_id, um_key=um_key)
     if check_result_response:
         return check_result_response
 
-    code, msg = handle_uploaded_file(um_key=um_key, f=request.FILES['file'])
+    code, msg = handle_uploaded_file(u_id=u_id, um_key=um_key, f=request.FILES['file'])
     r = u_http.get_r_dict(
         code=code,
         msg=msg,
@@ -341,7 +340,7 @@ def um_event_update(request):
     u_id: str = u_http.get_uid(request)
 
     um_key: str = ''.join(request.POST.values()) if request.POST else ""
-    code, msg = handle_update_file(um_key=um_key, f=request.FILES['file'])
+    code, msg = handle_update_file(u_id=u_id, um_key=um_key, f=request.FILES['file'])
     r = u_http.get_r_dict(
         code=code,
         msg=msg,
@@ -350,9 +349,10 @@ def um_event_update(request):
     return u_http.get_json_response(r)
 
 
-def handle_uploaded_file(um_key: str, f):
+def handle_uploaded_file(u_id: str, um_key: str, f):
     """
     处理上传的文件
+    :param u_id:
     :param um_key:
     :param f:
     :return:
@@ -362,14 +362,15 @@ def handle_uploaded_file(um_key: str, f):
         return -1, "友盟key不能为空"
 
     # 保存文件
-    file_path: str = f'{um_util.get_temp_file_dir()}/{f.name}'
+    task: UmTask = UmTask(u_id=u_id, um_socks=None)
+    file_path: str = f'{task.get_temp_file_dir()}/{f.name}'
     with open(file_path, 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
 
     if os.path.exists(file_path):
         print('文件保存成功，调用友盟的api进行批量上传自定义事件\n')
-        code, msg = um_util.upload_event(um_key=um_key, file_path=file_path)
+        code, msg = task.upload_event(um_key=um_key, file_path=file_path)
 
         print(f'\n删除刚才临时保存的文件：{file_path}')
         os.remove(file_path)
@@ -380,9 +381,10 @@ def handle_uploaded_file(um_key: str, f):
     return code, msg
 
 
-def handle_update_file(um_key: str, f):
+def handle_update_file(u_id: str, um_key: str, f):
     """
     处理需要更新的友盟事件 上传的文件
+    :param u_id:
     :param um_key:
     :param f:
     :return:
@@ -392,7 +394,8 @@ def handle_update_file(um_key: str, f):
         return -1, "友盟key不能为空"
 
     # 保存文件
-    file_path: str = f'{um_util.get_temp_file_dir()}/um_keys_new_add.txt'
+    task: UmTask = UmTask(u_id=u_id, um_socks=None)
+    file_path: str = f'{task.get_temp_file_dir()}/um_keys_new_add.txt'
     with open(file_path, 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
@@ -406,3 +409,39 @@ def handle_update_file(um_key: str, f):
 
     return code, msg
 
+
+def check_um_status(u_id: str, um_key: str) -> HttpResponse:
+    """
+    检查友盟连接状态，
+    :param u_id:
+    :param um_key:
+    :return: None=状态正常，HttpResponse=状态异常，直接返回该response
+    """
+    task: UmTask = UmTask(u_id=u_id, um_socks=None)
+    status, msg = task.check_um_status(um_key=um_key)
+    if status:
+        return None
+    else:
+        r = {
+            'code': 499,
+            'msg': msg or '友盟连接状态异常，请尝试更新友盟cookie',
+            'data': None
+        }
+        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)
+
+
+def check_um_key(um_key: str) -> HttpResponse:
+    """
+    检查友盟key值，
+    :param um_key:
+    :return: None=状态正常，HttpResponse=状态异常，直接返回该response
+    """
+    if um_key:
+        return None
+    else:
+        r = {
+            'code': 200,
+            'msg': '友盟key不能为空',
+            'data': None
+        }
+        return HttpResponse(json.dumps(r, ensure_ascii=False, cls=DateEncoder), content_type=u_http.CONTENT_TYPE_JSON)

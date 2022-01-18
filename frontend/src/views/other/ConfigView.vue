@@ -12,7 +12,7 @@
           </el-col>
 
           <el-col :span="12" align="right">
-           <el-button size="mini" type="primary" icon="el-icon-setting" @click="login">友盟官网（去登录获取cookie等）</el-button>
+           <el-button size="mini" type="primary" icon="el-icon-setting" @click="toLoginUm">友盟官网（去登录获取uc_cookie等）</el-button>
           </el-col>
 
         </el-row>
@@ -20,11 +20,11 @@
 
     <el-divider ></el-divider>
 
-<!--  获取cookie等配置信息引导-->
+<!--  获取uc_cookie等配置信息引导-->
   <el-steps :active="3" finish-status="success" simple="true" style="margin-left: 40px;margin-right: 40px">
-    <el-step title="登录友盟官网" @click="login"></el-step>
-    <el-step title="F12控制台复制参数" @click="login"></el-step>
-    <el-step title="保存配置" @click="addOrUpdateKv"></el-step>
+    <el-step title="登录友盟官网" @click="toLoginUm"></el-step>
+    <el-step title="F12控制台复制参数" @click="toLoginUm"></el-step>
+    <el-step title="保存配置" @click="addOrUpdateConfig"></el-step>
   </el-steps>
 
     <el-form
@@ -34,24 +34,24 @@
     style="margin: 20px;width: 96.5%"
   >
 
-    <el-form-item label="CONTENT_TYPE" :required="true">
-      <el-input v-model="form.CONTENT_TYPE" placeholder="【必填】默认值为application/json;charset=UTF-8"></el-input>
+    <el-form-item label="content_type" :required="true">
+      <el-input v-model="form.uc_content_type" placeholder="【必填】默认值为application/json;charset=UTF-8"></el-input>
     </el-form-item>
-    <el-form-item label="USER_AGENT" :required="true">
-      <el-input v-model="form.USER_AGENT" placeholder="【必填】请求头中的[user-agent]字段内容"></el-input>
+    <el-form-item label="user_agent" :required="true">
+      <el-input v-model="form.uc_user_agent" placeholder="【必填】请求头中的[user-agent]字段内容"></el-input>
     </el-form-item>
-     <el-form-item label="COOKIE" :required="true">
-      <el-input v-model="form.COOKIE" placeholder="【必填】友盟那边登录成功后请求头中的[cookie]字段内容"></el-input>
+     <el-form-item label="cookie" :required="true">
+      <el-input v-model="form.uc_cookie" placeholder="【必填】友盟那边登录成功后请求头中的[uc_cookie]字段内容"></el-input>
     </el-form-item>
-    <el-form-item label="X_XSRF_TOKEN">
-      <el-input v-model="form.X_XSRF_TOKEN" placeholder="【不用手动填】会自动从cookie中的[XSRF-TOKEN]中读取，如果取不到，请检查是否登录后的cookie"></el-input>
+    <el-form-item label="token">
+      <el-input v-model="form.uc_token" placeholder="【不用手动填】会自动从uc_cookie中的[XSRF-TOKEN]中读取，如果取不到，请检查是否登录后的uc_cookie"></el-input>
     </el-form-item>
-    <el-form-item label="X_XSRF_HAITANG">
-      <el-input v-model="form.X_XSRF_HAITANG" placeholder="【不用手动填】会自动从cookie中的[XSRF-TOKEN-HAITANG]中读取，如果取不到，请检查是否登录后的cookie"></el-input>
+    <el-form-item label="token_haitang">
+      <el-input v-model="form.uc_token_haitang" placeholder="【不用手动填】会自动从uc_cookie中的[XSRF-TOKEN-HAITANG]中读取，如果取不到，请检查是否登录后的uc_cookie"></el-input>
     </el-form-item>
   </el-form>
 
-  <el-button type="primary" size="mini" @click="addOrUpdateKv" icon="el-icon-upload" style="margin-left: 45%;margin-right: 45%">保存</el-button>
+  <el-button type="primary" size="mini" @click="addOrUpdateConfig" icon="el-icon-upload" style="margin-left: 45%;margin-right: 45%">保存</el-button>
 
   </el-container>
 
@@ -71,27 +71,28 @@ export default defineComponent({
   },
   setup() {
     const state = reactive({
+      DEFAULT_CONTENT_TYPE: 'application/json;charset=UTF-8',
       form: {
-        CONTENT_TYPE: 'application/json;charset=UTF-8',
-        USER_AGENT: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36',
-        X_XSRF_TOKEN: '',
-        X_XSRF_HAITANG: '',
-        COOKIE: '',
-        UM_KEY_MASTER: '',
-        UM_KEY_SLAVES: [],
+        uc_content_type: '',
+        uc_user_agent: '',
+        uc_token: '',
+        uc_token_haitang: '',
+        uc_cookie: '',
+        uc_key_master: '',
+        uc_key_slaves: '',
       },
     })
 
-    // 保存/更新 主机
-    const addOrUpdateKv = () => {
+    // 保存/更新 配置
+    const addOrUpdateConfig = () => {
 
-      // 从cookie中解析token
-      console.log(state.form.COOKIE)
-      state.form.COOKIE.split(';').forEach((item) => {
+      // 从uc_cookie中解析token信息
+      console.log(state.form.uc_cookie)
+      state.form.uc_cookie.split(';').forEach((item) => {
         if (item.search('XSRF-TOKEN-HAITANG') != -1){
-          state.form.X_XSRF_HAITANG = item.split('=')[1]
+          state.form.uc_token_haitang = item.split('=')[1]
         }else if (item.search('XSRF-TOKEN') != -1){
-          state.form.X_XSRF_TOKEN = item.split('=')[1]
+          state.form.uc_token = item.split('=')[1]
         }
       });
 
@@ -107,6 +108,11 @@ export default defineComponent({
       api.um.get_config()
           .then((res:any) => {
             state.form = res.data.data;
+
+            // 如果为空，设置默认值
+            if(state.form.uc_content_type.length == 0){
+              state.form.uc_content_type = state.DEFAULT_CONTENT_TYPE
+            }
           })
     }
 
@@ -118,9 +124,9 @@ export default defineComponent({
 
     return {
       ...toRefs(state),
-      addOrUpdateKv,
+      addOrUpdateConfig,
       getConfig,
-      login: toLoginUm,
+      toLoginUm,
     }
   },
 })

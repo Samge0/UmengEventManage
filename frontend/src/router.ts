@@ -1,5 +1,4 @@
 import HomeView from "@/views/home/KeyManage.vue";
-import KeyValueManage from "@/views/other/KeyValueManage.vue";
 import ConfigView from "@/views/other/ConfigView.vue";
 import LoginView from "@/views/user/LoginView.vue";
 // @ts-ignore
@@ -27,12 +26,6 @@ const routes = [
     path: "/other/task",
     component: TaskManage,
     name: '任务管理'
-  },
-
-  {
-    path: "/other/kvManage",
-    component: KeyValueManage,
-    name: '键值管理'
   },
 
   {

@@ -96,12 +96,6 @@ export default defineComponent({
           "icon": "el-icon-date",
           "path": "/other/events",
         },
-        /*{
-          "name": "键值管理",
-          "id": "5",
-          "icon": "el-icon-setting",
-          "path": "/other/kvManage",
-        },*/
       ],
     })
 

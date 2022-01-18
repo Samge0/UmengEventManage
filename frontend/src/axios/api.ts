@@ -15,22 +15,11 @@ class api {
     del_um_key: (params?: any) => Request.post('/api/del_um_key', params),
     // 友盟key-设置主key
     um_key_master: (params?: any) => Request.post('/api/um_key_master', params),
-    // 友盟key-获取所有app列表
-    get_um_apps: () => Request.get('/api/get_um_apps'),
 
     // 配置管理-保存配置
     save_config: (params?: any) => Request.post('/api/save_config', params),
     // 配置管理-读取配置
     get_config: () => Request.get('/api/get_config'),
-
-    // 键值对管理-添加键值对
-    add_kv: (params?: any) => Request.post('/api/add_kv', params),
-    // 键值对管理-获取列表
-    get_kvs: () => Request.get('/api/get_kvs'),
-    // 键值对管理-删除
-    del_kv: (params?: any) => Request.post('/api/del_kv', params),
-    // 键值对管理-设置是否有效
-    kv_status: (params?: any) => Request.post('/api/kv_status', params),
 
     // 友盟事件管理
     um_event: (params?: any) => Request.post('/api/um_event', params),

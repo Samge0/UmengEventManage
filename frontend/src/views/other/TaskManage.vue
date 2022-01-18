@@ -14,7 +14,7 @@
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="timeLineList=[]">清空</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" v-if="false" @click="initWebsocket()">连接sock</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="stopTask()">中止任务</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="dialogFormVisible = true;">上传/更新事件</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="uploadEvent()">上传/更新事件</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-phone" @click="startSynTask()">执行【同步】任务</el-button>
           </el-col>
 
@@ -47,10 +47,11 @@
             :action="uploadUrl"
             :on-success="handleUploadSucceed"
             :file-list="fileList"
-            :show-file-list="false"
+            :data="uc_key_master"
+            :headers="upload_headers"
+            show-file-list="false"
             multiple="false"
             drag="true"
-            :data="umConfig.UM_KEY_MASTER"
           >
           <el-button size="mini" icon="el-icon-upload" style="background-color: transparent; border: 0px"></el-button>
           <div class="el-upload__text">
@@ -69,9 +70,10 @@ import { defineComponent, reactive, toRefs } from 'vue'
 import {Socket} from "socket.io-client/build/esm/socket";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
+import router from "@/router";
 
 let socketClient: Socket|any = null;
-let timer: Socket|any = null;
+
 
 export default defineComponent({
 
@@ -81,8 +83,10 @@ export default defineComponent({
   created() {
     // 关闭连接的事件
     // this.initWebsocket()
+
     this.getConfig()
   },
+
 
   // onMounted(){
   //   // this.initWebsocket()
@@ -96,18 +100,18 @@ export default defineComponent({
 
   setup() {
     const state = reactive( {
-      // 配置信息
-      umConfig: {
-        CONTENT_TYPE: '',
-        USER_AGENT: '',
-        X_XSRF_TOKEN: '',
-        X_XSRF_HAITANG: '',
-        COOKIE: '',
-        UM_KEY_MASTER: '',
-        UM_KEY_SLAVES: [],
+
+      // 上传头加认证信息
+      upload_headers: {
+        'Authorization': localStorage.getItem("token"),
       },
+
+      // uc_key_master
+      uc_key_master:'',
+
       // 任务类型
       taskType: '',
+
       // 时间线的列表
       timeLineList: [
         {
@@ -140,7 +144,6 @@ export default defineComponent({
       state.taskType = ''
       let data = {
           'type': 'stop',
-          'config': state.umConfig
         }
       websocketSend(data)
     }
@@ -149,7 +152,9 @@ export default defineComponent({
      * 点击执行 友盟同步任务
      */
     const startSynTask = () => {
-      startTask('syn')
+      if(checkUmKey()){
+        startTask('syn')
+      }
     }
 
     /**
@@ -171,7 +176,6 @@ export default defineComponent({
       if(initWebsocket()){
         let data = {
           'type': taskType,
-          'config': state.umConfig
         }
         websocketSend(data)
       }
@@ -201,13 +205,11 @@ export default defineComponent({
         console.log('websocketOnOpen');
         let data = {
           'type': 'connect',
-          'config': state.umConfig
         }
         websocketSend(data)
         if(state.taskType != null && state.taskType != ''){
           let data2 = {
             'type': state.taskType,
-            'config': state.umConfig
           }
           websocketSend(data2)
         }
@@ -274,37 +276,46 @@ export default defineComponent({
       console.log('销毁 websocket 实例对象');
     }
 
-    /**
-     * 启动一个定时器
-     */
-    const startTimer =()=>{
-      timer = setInterval(()=>{
-        console.log(1)
-      },1000)
-    }
-    /**
-     * 停止一个定时器
-     */
-    const stopTimer =()=>{
-      clearInterval(timer)
-    }
-
-    /**
-     * 获取配置信息
-     */
-    const getConfig = () => {
-      api.um.get_config()
-          .then((res:any) => {
-            state.umConfig = res.data.data;
-          })
-    }
-
-    // 文件上传成
+    // 文件上传结果监听
     const handleUploadSucceed = (response: any, file: any, file_list: any) => {
       state.dialogFormVisible = false
       console.log(`handleUploadSucceed ${response }${file} ${file_list}`)
+      if(response.code != 200){
+        toast.showError(response.msg)
+      }
+      if(response.code == 401 || response.code == 403){
+        router.push('/login')
+        return
+      }
       toast.showSuccess('上传成功，开始同步更新友盟事件')
       startUpdateTask()
+    }
+
+    // 上传事件
+    const uploadEvent = () => {
+      if(checkUmKey()){
+        state.dialogFormVisible = true
+      }
+    }
+
+    // 获取配置信息
+    const getConfig = () => {
+      api.um.get_config()
+          .then((res:any) => {
+            state.uc_key_master = res.data.data.uc_key_master;
+          })
+    }
+
+    /**
+     * 检查友盟key是否配置
+     */
+    const checkUmKey = () => {
+      if(state.uc_key_master.length == 0){
+        toast.showWarning("请先设置一个【Master】类型的友盟KEY")
+        router.push('/home')
+        return false
+      }
+      return true
     }
 
     return {
@@ -313,6 +324,7 @@ export default defineComponent({
       startTask,
       startSynTask,
       startUpdateTask,
+      uploadEvent,
 
       initWebsocket,
       closeWebsocket,
@@ -325,10 +337,8 @@ export default defineComponent({
       websocketSend,
 
       getCurrDate,
-      getConfig,
 
-      startTimer,
-      stopTimer,
+      getConfig,
 
       handleUploadSucceed,
     }

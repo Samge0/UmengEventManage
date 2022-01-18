@@ -1,4 +1,4 @@
-<!--主机管理-->
+<!--友盟key管理-->
 <template>
     <el-container direction="vertical"
                   class="demo-shadow">

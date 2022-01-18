@@ -40,23 +40,26 @@ class UmKey(models.Model):
         return self.um_md5
 
 
-class KeyValue(models.Model):
+class UserConfig(models.Model):
     """
-    键值对管理的model
+    用户配置
     """
     indexes = [
-        models.Index(fields=['kv_md5']),  # 单索引
+        models.Index(fields=['u_id']),  # 单索引
     ]
-    u_id = models.CharField(max_length=11, default="")
-    kv_md5 = models.CharField(max_length=128)
-    kv_name = models.CharField(max_length=128, default="")
-    kv_key = models.CharField(max_length=128)
-    kv_value = models.CharField(max_length=5000)
-    kv_status = models.BooleanField(default=True)  # 是否有效
-    kv_add_time = models.DateTimeField(auto_now_add=True)
+    u_id = models.CharField(max_length=11)
+    uc_content_type = models.CharField(max_length=100)
+    uc_user_agent = models.CharField(max_length=500)
+    uc_token = models.CharField(max_length=100)
+    uc_token_haitang = models.CharField(max_length=100)
+    uc_cookie = models.CharField(max_length=5000)
+    uc_key_master = models.CharField(max_length=50)
+    uc_key_slaves = models.CharField(max_length=5000)
+    uc_add_time = models.DateTimeField(auto_now_add=True)
+    uc_update_time = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return self.kv_md5
+        return self.u_id
 
 
 class UmEventModel(models.Model):

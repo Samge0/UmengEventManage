@@ -2,50 +2,71 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/11/26 上午11:19
 # @Author  : Samge
-from ..um import um_util
-
-# 配置
-config = {}
-# 主配置的友盟key
-UM_KEY_MASTER = ''
-# 其他需要更新的马甲的友盟key
-UM_KEY_SLAVES = []
+from .um_util import UmTask
+from ..models import UserConfig
 
 
-def do_um_synchro_task():
+def do_um_synchro_task(u_id: str, um_socks) -> UmTask:
     """
     开始执行友盟同步任务
+    :param u_id:
+    :param um_socks:
     :return:
     """
-    um_util.cache_event_list(um_keys=[UM_KEY_MASTER] + list(UM_KEY_SLAVES))
-    for um_key in UM_KEY_SLAVES:
-        um_util.update_um_data(um_key=um_key, um_key_master=UM_KEY_MASTER)
+    task: UmTask = UmTask(u_id=u_id, um_socks=um_socks)
+    key_master, key_slaves = _get_um_key_config(u_id=u_id)
+    if not key_master:
+        return None
+    task.cache_event_list(um_keys=[key_master] + list(key_slaves))
+    for um_key in key_slaves:
+        task.update_um_data(um_key=um_key, um_key_master=key_master)
+    return task
 
 
-def do_add_or_update_task():
+def do_add_or_update_task(u_id: str, um_socks) -> UmTask:
     """
     执行添加/更新友盟自定义事件的任务
+    :param u_id:
+    :param um_socks:
     :return:
     """
-    um_util.cache_event_list(um_keys=[UM_KEY_MASTER] + list(UM_KEY_SLAVES))
-    um_util.add_or_update_event_by_file(UM_KEY_MASTER)
+    task: UmTask = UmTask(u_id=u_id, um_socks=um_socks)
+    key_master, key_slaves = _get_um_key_config(u_id=u_id)
+    if not key_master:
+        return None
+    task.cache_event_list(um_keys=[key_master] + list(key_slaves))
+    task.add_or_update_event_by_file(um_key=key_master)
+    return task
 
 
-def get_analysis_event_list(um_key: str, refresh: bool):
+def get_analysis_event_list(u_id: str, um_key: str, refresh: bool):
     """
     获取友盟自定义事件列表
+    :param u_id:
     :param um_key:
     :param refresh: 是否需要重新充网络中获取数据
     :return:
     """
+    task: UmTask = UmTask(u_id=u_id, um_socks=None)
+
     need_refresh: bool = refresh \
-                         or um_util.is_exists_pause(um_key=um_key) is False \
-                         or um_util.is_exists_normal_analysis(um_key=um_key) is False
+                         or task.is_exists_pause(um_key=um_key) is False \
+                         or task.is_exists_normal_analysis(um_key=um_key) is False
     if need_refresh:
         print(f'获取友盟自定义事件列表 需要刷新')
-        um_util.cache_analysis_event_list(um_keys=[um_key])
+        task.cache_analysis_event_list(um_keys=[um_key])
     print(f'获取友盟自定义事件列表 直接从缓存中取')
-    return um_util.get_all_events_with_analysis(um_key=um_key)
+    return task.get_all_events_with_analysis(um_key=um_key)
 
 
+def _get_um_key_config(u_id: str) -> (str, list):
+    """
+    获取友盟key配置信息
+    :param u_id:
+    :return:
+    """
+    values = UserConfig.objects.filter(u_id=u_id).values() or []
+    if len(values) == 0:
+        return '', []
+    return values[0].get('uc_key_master'), values[0].get('uc_key_slaves').split('|')
 

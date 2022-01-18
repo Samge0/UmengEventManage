@@ -3,16 +3,13 @@
 # @Time    : 2022/1/7 上午10:07
 # @Author  : Samge
 
-import json
 import time
 
 from django.core import signing
 from django.db.models import Q
-from django.http import HttpResponse
 
 from api.models import User
 from api.utils import u_http
-from api.utils.u_json import DateEncoder
 
 # token过期时间，单位：秒
 TOKEN_EXPIRE_TIME = 60 * 60 * 24 * 365
