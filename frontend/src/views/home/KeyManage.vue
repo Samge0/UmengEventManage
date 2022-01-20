@@ -13,8 +13,8 @@
           <el-col :span="12" align="right">
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="resetDisplayName=true; refreshDrawer=true; getUmApps(); getUmKeys(true);">重置名称</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="refreshDrawer=true;  getUmApps(); getUmKeys(true);">刷新数据</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'" v-if="false">添加Key</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-menu" @click="showDrawer = true; getUmApps()">友盟应用</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="showUmApps()" v-if="false">添加Key</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-menu" @click="showUmApps()">友盟应用</el-button>
           </el-col>
 
         </el-row>
@@ -41,7 +41,7 @@
       </el-table>
 
      <el-empty description="暂无相关数据" v-show="tableData.length == 0" style="margin-top: 100px">
-       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="dialogFormVisible = true; dialogCommitTitle = '保存'">添加Key</el-button>
+       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="showUmApps()">添加Key</el-button>
      </el-empty>
 
       <!--弹窗-->
@@ -276,6 +276,12 @@ export default defineComponent({
       state.showDrawer = false
     }
 
+    // 显示友盟应用列表
+    const showUmApps = () => {
+      state.showDrawer = true
+      getUmApps()
+    }
+
     return {
       ...toRefs(state),
       addOrUpdateKey,
@@ -285,6 +291,7 @@ export default defineComponent({
       setMaster,
       deleteUmKey,
       onDrawerClose,
+      showUmApps,
 
       addApp,
       removeApp,
