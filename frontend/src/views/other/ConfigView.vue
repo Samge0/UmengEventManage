@@ -12,7 +12,7 @@
           </el-col>
 
           <el-col :span="12" align="right">
-           <el-button size="mini" type="primary" icon="el-icon-setting" @click="toLoginUm">友盟官网（去登录获取uc_cookie等）</el-button>
+           <el-button size="mini" type="primary" icon="el-icon-setting" @click="toLoginUm">友盟官网（去登录获取cookie等）</el-button>
           </el-col>
 
         </el-row>
@@ -41,13 +41,13 @@
       <el-input v-model="form.uc_user_agent" placeholder="【必填】请求头中的[user-agent]字段内容"></el-input>
     </el-form-item>
      <el-form-item label="cookie" :required="true">
-      <el-input v-model="form.uc_cookie" placeholder="【必填】友盟那边登录成功后请求头中的[uc_cookie]字段内容"></el-input>
+      <el-input v-model="form.uc_cookie" placeholder="【必填】友盟那边登录成功后请求头中的[uc_cookie]字段内容" @input="onCookieInput"></el-input>
     </el-form-item>
     <el-form-item label="token">
-      <el-input v-model="form.uc_token" placeholder="【不用手动填】会自动从uc_cookie中的[XSRF-TOKEN]中读取，如果取不到，请检查是否登录后的uc_cookie"></el-input>
+      <el-input v-model="form.uc_token" placeholder="【不用手动填】会自动从uc_cookie中的[XSRF-TOKEN]中读取，如果取不到，请检查是否正确的友盟登录后的uc_cookie"></el-input>
     </el-form-item>
     <el-form-item label="token_haitang">
-      <el-input v-model="form.uc_token_haitang" placeholder="【不用手动填】会自动从uc_cookie中的[XSRF-TOKEN-HAITANG]中读取，如果取不到，请检查是否登录后的uc_cookie"></el-input>
+      <el-input v-model="form.uc_token_haitang" placeholder="【不用手动填】会自动从uc_cookie中的[XSRF-TOKEN-HAITANG]中读取，如果取不到，请检查是否正确的友盟登录后的uc_cookie"></el-input>
     </el-form-item>
   </el-form>
 
@@ -61,6 +61,7 @@
 import { defineComponent, reactive, toRefs } from 'vue'
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
+import {uStr} from "@/utils/uStr";
 
 export default defineComponent({
 
@@ -83,18 +84,56 @@ export default defineComponent({
       },
     })
 
-    // 保存/更新 配置
-    const addOrUpdateConfig = () => {
-
-      // 从uc_cookie中解析token信息
+    /**
+     * 从cookie中读取token信息
+     */
+    function parseTokenFromCookie() {
       console.log(state.form.uc_cookie)
+      if(isBadCookie()){
+        console.log("该cookie中没有token信息，跳过")
+        state.form.uc_token = ""
+        state.form.uc_token_haitang = ""
+        return
+      }
       state.form.uc_cookie.split(';').forEach((item) => {
-        if (item.search('XSRF-TOKEN-HAITANG') != -1){
+        if (item.search('XSRF-TOKEN-HAITANG') != -1) {
           state.form.uc_token_haitang = item.split('=')[1]
-        }else if (item.search('XSRF-TOKEN') != -1){
+        } else if (item.search('XSRF-TOKEN') != -1) {
           state.form.uc_token = item.split('=')[1]
         }
       });
+    }
+
+    function isBadCookie() {
+      return state.form.uc_cookie.search('XSRF-TOKEN-HAITANG') == -1
+          && state.form.uc_cookie.search('XSRF-TOKEN-HAITANG') == -1;
+    }
+
+// 保存/更新 配置
+    const addOrUpdateConfig = () => {
+
+      if(uStr.isEmpty(state.form.uc_user_agent)){
+        toast.showWarning("请填写user_agent信息")
+        return
+      }
+
+      if(uStr.isEmpty(state.form.uc_cookie)){
+        toast.showWarning("请填写cookie信息")
+        return
+      }
+
+      if(isBadCookie()){
+        toast.showWarning("请填写正确的cookie信息（该cookie中未找到token信息）")
+        return
+      }
+
+      // 从uc_cookie中解析token信息
+      parseTokenFromCookie();
+
+      // 如果为空，设置默认值
+      if(uStr.isEmpty(state.form.uc_content_type)){
+        state.form.uc_content_type = state.DEFAULT_CONTENT_TYPE
+      }
 
       console.log(JSON.stringify(state.form))
       api.um.save_config(state.form)
@@ -108,9 +147,8 @@ export default defineComponent({
       api.um.get_config()
           .then((res:any) => {
             state.form = res.data.data;
-
             // 如果为空，设置默认值
-            if(state.form.uc_content_type.length == 0){
+            if(uStr.isEmpty(state.form.uc_content_type)){
               state.form.uc_content_type = state.DEFAULT_CONTENT_TYPE
             }
           })
@@ -122,11 +160,18 @@ export default defineComponent({
       window.open("https://mobile.umeng.com/platform/apps/list", "_blank");
     }
 
+    // cookie输入监听
+    const onCookieInput = () => {
+      console.log("cookie输入监听")
+      parseTokenFromCookie()
+    }
+
     return {
       ...toRefs(state),
       addOrUpdateConfig,
       getConfig,
       toLoginUm,
+      onCookieInput,
     }
   },
 })
