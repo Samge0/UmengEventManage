@@ -40,7 +40,7 @@
         </el-table-column>
       </el-table>
 
-     <el-empty description="暂无相关数据" v-show="tableData.length == 0" style="margin-top: 100px">
+     <el-empty description="暂无相关数据" v-show="tableData.length === 0" style="margin-top: 100px">
        <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="showUmApps()">添加Key</el-button>
      </el-empty>
 
@@ -94,7 +94,7 @@
         :before-close="onDrawerClose"
       >
 <!--          空页面-->
-          <el-empty description="暂无相关数据" v-show="allKeyList.length == 0" style="margin-top: 100px">
+          <el-empty description="暂无相关数据" v-show="allKeyList.length === 0" style="margin-top: 100px">
              <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="this.$router.push('/other/config')">更新配置</el-button>
           </el-empty>
 

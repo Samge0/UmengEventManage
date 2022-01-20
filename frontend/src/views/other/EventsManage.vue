@@ -78,7 +78,7 @@
      </el-pagination>
 
 <!--      空页面-->
-     <el-empty description="暂无相关数据" v-show="tableData.length == 0" style="margin-top: 100px">
+     <el-empty description="暂无相关数据" v-show="tableData.length === 0" style="margin-top: 100px">
        <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="dialogFormVisible = true;">上传事件</el-button>
      </el-empty>
 
@@ -332,7 +332,7 @@ export default defineComponent({
 
     // 批量暂停/ 批量恢复
     const parseEventOp = (op_type: number) => {
-      if(state.ids.length == 0 || state.ids[0] == ''){
+      if(state.ids.length === 0 || state.ids[0] === ''){
         toast.showWarning("请先选择要操作的数据")
         return
       }

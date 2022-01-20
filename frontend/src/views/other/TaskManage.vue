@@ -71,6 +71,7 @@ import {Socket} from "socket.io-client/build/esm/socket";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 import router from "@/router";
+import {uStr} from "@/utils/uStr";
 
 let socketClient: Socket|any = null;
 
@@ -311,7 +312,7 @@ export default defineComponent({
      * 检查友盟key是否配置
      */
     const checkUmKey = () => {
-      if(state.uc_key_master.length == 0){
+      if(uStr.isEmpty(state.uc_key_master)){
         toast.showWarning("请先设置一个【Master】类型的友盟KEY")
         router.push('/home')
         return false

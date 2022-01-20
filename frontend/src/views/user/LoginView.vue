@@ -84,6 +84,7 @@ import { api } from '@/axios/api'
 import { defineComponent, reactive, toRefs } from 'vue'
 import {toast} from "@/utils/toast";
 import router from '@/router';
+import {uStr} from "@/utils/uStr";
 export default defineComponent({
   created() {
     const name = localStorage.getItem('u_name') || ""
@@ -116,11 +117,11 @@ export default defineComponent({
     const doLogin = () => {
       api.um.login(state.loginForm)
       .then((res:any) => {
-        if(state.loginForm.u_name.length == 0){
+        if(uStr.isEmpty(state.loginForm.u_name)){
           toast.showWarning("请输入账号")
           return
         }
-        if(state.loginForm.u_pw.length < 6){
+        if(uStr.isEmpty(state.loginForm.u_pw) || state.loginForm.u_pw.length < 6){
           toast.showWarning("请输入6位及以上长度密码")
           return
         }
@@ -133,11 +134,11 @@ export default defineComponent({
      * 注册
      */
     const doReg = () => {
-      if(state.regForm.u_phone.length != 11 ){
+      if(uStr.isEmpty(state.regForm.u_phone) || state.regForm.u_phone.length != 11 ){
         toast.showWarning("请输入正确的手机号")
         return
       }
-      if(state.regForm.u_pw.length < 6){
+      if(uStr.isEmpty(state.regForm.u_pw) || state.regForm.u_pw.length < 6){
         toast.showWarning("请输入6位及以上长度密码")
         return
       }
