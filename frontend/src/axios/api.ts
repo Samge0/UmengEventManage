@@ -33,7 +33,7 @@ class api {
     um_event_update: `${Base.BASE_URL}/api/um_event_update`,
 
     // 友盟socket连接
-    um_socket: `${Base.BASE_URL_SOCKET}/ws/um/${localStorage.getItem('u_id')}`,
+    um_socket: `${Base.BASE_URL_SOCKET}/ws/um/`,
 
     // 登录
     login: (params?: any) => Request.post('/api/login', params),

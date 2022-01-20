@@ -255,7 +255,8 @@ export default defineComponent({
      * 初始化websocket
      */
     const initWebsocket = () => {
-      socketClient = new WebSocket(api.um.um_socket);
+      const url = `${api.um.um_socket}${localStorage.getItem('u_id')}`
+      socketClient = new WebSocket(url);
       socketClient.onmessage = websocketOnMessage;
       socketClient.onopen = websocketOnOpen;
       socketClient.onconnect = websocketOnConnect;
