@@ -32,7 +32,7 @@
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOp(0)">批量暂停</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOp(1)">批量恢复</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="dialogFormVisible = true;">上传事件</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="uploadEventFile()">上传事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportCurrEvents">导出事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-sort" @click="showDrawer = true;">事件筛选</el-button>
           </el-col>
@@ -79,7 +79,7 @@
 
 <!--      空页面-->
      <el-empty description="暂无相关数据" v-show="tableData.length === 0" style="margin-top: 100px">
-       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="dialogFormVisible = true;">上传事件</el-button>
+       <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="uploadEventFile()">上传事件</el-button>
      </el-empty>
 
       <!--上传事件的弹窗-->
@@ -205,15 +205,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRefs } from 'vue'
+import {defineComponent, reactive, toRefs} from 'vue'
 import {saveAs} from "file-saver";
 import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 import router from "@/router";
+import {uStr} from "@/utils/uStr";
 
 
 export default defineComponent({
   created() {
+    this.tableData = []
     this.onFilterReset()
     this.getUmKeys()
   },
@@ -230,7 +232,7 @@ export default defineComponent({
         order_by: 'um_deviceYesterday',
         order: 'desc',
         state: 'normal',
-        type: '1',
+        type: '',
         count_limit: {}
       },
 
@@ -242,7 +244,7 @@ export default defineComponent({
 
       uploadUrl: api.um.um_event_import,
 
-      loading: true,
+      loading: false,
 
       tableData: [
         {
@@ -284,8 +286,10 @@ export default defineComponent({
 
     // 获取友盟key列表
     const getUmKeys = () => {
+      state.loading = true
       api.um.get_um_keys({'um_status': 1, 'refresh': false})
           .then((res: any) => {
+            state.loading = false
             if (res.data.data.length > 0) {
               state.umKeys = res.data.data
               state.query.um_key = res.data.data[0].um_key
@@ -297,8 +301,23 @@ export default defineComponent({
           })
     }
 
+    /**
+     * 检查是否已经配置了友盟key
+     */
+    const checkUmKey = () =>  {
+      if(uStr.isEmpty(state.query.um_key)){
+        toast.showWarning("请先设置一个友盟KEY")
+        router.push('/home')
+        return false
+      }
+      return true
+    }
+
     // 获取事件列表
     const getUmEvents = () => {
+      if(!checkUmKey()){
+        return
+      }
       state.loading = true
       api.um.um_event(state.query)
           .then((res: any) => {
@@ -314,6 +333,9 @@ export default defineComponent({
 
     // 编辑
     const editHost = (index: any, row: any) => {
+      if(!checkUmKey()){
+        return
+      }
       console.log(index, row)
       state.form = {
         um_key: row.um_key,
@@ -332,6 +354,9 @@ export default defineComponent({
 
     // 批量暂停/ 批量恢复
     const parseEventOp = (op_type: number) => {
+      if(!checkUmKey()){
+        return
+      }
       if(state.ids.length === 0 || state.ids[0] === ''){
         toast.showWarning("请先选择要操作的数据")
         return
@@ -347,13 +372,11 @@ export default defineComponent({
           })
     }
 
-    // 添加或更新单条事件
-    const addOrUpdateEvent = () => {
-      console.log("添加或更新单条事件")
-    }
-
     // 导出当前筛选的自定义事件
     const exportCurrEvents = () => {
+      if(!checkUmKey()){
+        return
+      }
       let txt: string = '';
       for (let item of state.tableData) {
         if (txt.length > 0) {
@@ -368,11 +391,22 @@ export default defineComponent({
 
     // 导出所有事件
     const exportAllEvents = () => {
+      if(!checkUmKey()){
+        return
+      }
       api.um.um_event_export(state.query)
           .then((res:any) => {
             let blobTxt = new Blob([res.data.data], {type: 'text/plain;charset=utf-8'});
             saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
           })
+    }
+
+    // 上传自定义事件文件
+    const uploadEventFile = () => {
+      if(!checkUmKey()){
+        return
+      }
+      state.dialogFormVisible = true;
     }
 
     // 分页当前页改变的监听
@@ -429,7 +463,7 @@ export default defineComponent({
         order_by: 'um_deviceYesterday',
         order: 'desc',
         state: 'normal',
-        type: '1',
+        type: '',
         count_limit: {
           yesterday_min: undefined,
           yesterday_max: undefined,
@@ -477,11 +511,11 @@ export default defineComponent({
 
       editHost,
       parseEventOp,
-      addOrUpdateEvent,
       onCurrentPageChange,
       onPageSizeChange,
       exportCurrEvents,
       exportAllEvents,
+      uploadEventFile,
 
       handleSelectionChange,
 
