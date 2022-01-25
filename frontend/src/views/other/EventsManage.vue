@@ -97,7 +97,7 @@
             >
             <el-button size="mini" icon="el-icon-upload" style="background-color: transparent; border: 0px"></el-button>
             <div class="el-upload__text">
-              拖拽文件到这里 <em> 或点击上传 </em>
+              拖拽文件到这里 <em> 或点击上传 </em><br>格式：事件id, 事件名称, 事件类型（0或1）
             </div>
           </el-upload>
       </el-dialog>
