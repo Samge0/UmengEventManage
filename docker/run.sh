@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cd /app
+python3 manage.py makemigrations api
 python3 manage.py migrate
 
 # 启动supervisor
