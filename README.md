@@ -1,5 +1,13 @@
+![UMEM 友盟统计自定义事件多应用一键同步 & 批量处理工具](screenshots/umem.png)
+
+![](https://img.shields.io/github/release/samge0/UmengEventManage)
+![](https://img.shields.io/github/last-commit/samge0/UmengEventManage)
+![](https://img.shields.io/github/issues/samge0/UmengEventManage)
+![](https://img.shields.io/docker/pulls/samge/umem?logo=docker)
+![](https://img.shields.io/github/license/samge0/UmengEventManage)
+
 ### 一、介绍
-友盟自定义事件多应用同步管理小工具（django+vue版本）
+友盟统计自定义事件多应用一键同步 & 批量处理工具（django3+vue3+docker版本）
 
 ### 二、运行docker镜像
 
