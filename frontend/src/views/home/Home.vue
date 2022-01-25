@@ -2,7 +2,7 @@
   <el-container>
 
 <!--    左侧切换菜单-->
-    <HomeLeftAside v-if="showMenu"/>
+    <HomeLeftAside/>
 
 <!--    右侧内容面板-->
     <el-container style="background-color: #f4f4f4">
@@ -24,30 +24,18 @@ export default defineComponent({
     HomeLeftAside,
   },
 
-  watch:{
-      // 监听路由变化
-      '$route':'fetchData'
+  created() {
   },
 
-  created() {
-      this.fetchData()
+  mounted(){
   },
 
   setup() {
     const state = reactive({
-      showMenu: false,
     })
-
-    /**
-     * 监听路由变化，及时刷新页面并切换到指定tab页
-     */
-    const fetchData = () =>{
-       state.showMenu=window.location.href.indexOf('/login') == -1
-     }
 
     return {
       ...toRefs(state),
-      fetchData,
     }
   },
 })

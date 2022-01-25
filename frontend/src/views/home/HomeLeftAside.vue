@@ -47,12 +47,13 @@ export default defineComponent({
 
   created() {
     console.log(`created`);
+    this.checkCurrPathByUrl()
   },
 
   mounted(){
     console.log(`mounted`);
-    this.parseNameInfo()
     this.checkCurrPathByUrl()
+    this.parseNameInfo()
   },
 
   watch:{
@@ -61,8 +62,8 @@ export default defineComponent({
       console.log(`$route 路由发生变化 ${to} ${from}`);
       this.currPath = to.path
       console.log(`this.currPath = ${this.currPath}`)
-      this.parseNameInfo()
       this.checkCurrPathByUrl()
+      this.parseNameInfo()
     }
   },
 
