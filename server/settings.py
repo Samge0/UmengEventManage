@@ -46,12 +46,12 @@ ASGI_APPLICATION = 'server.routing.app'
 # docker run -d -p 6379:6379 --restart always --name redis5 redis:5
 # python3 -m pip install channels_redis
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
-        },
-    },
+    # 'default': {
+    #     'BACKEND': 'channels_redis.core.RedisChannelLayer',
+    #     'CONFIG': {
+    #         "hosts": [('127.0.0.1', 6379)],
+    #     },
+    # },
 }
 
 MIDDLEWARE = [
