@@ -140,6 +140,7 @@ STATIC_URL = '/static/'
 
 # 配置静态文件夹路径
 STATICFILES_DIRS = (
+    os.path.join(BASE_DIR.parent, 'api/templates'),
     os.path.join(BASE_DIR.parent, 'api/templates/static'),
 )
 

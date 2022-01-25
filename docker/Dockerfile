@@ -17,6 +17,7 @@ COPY ./docker /app/docker
 ADD ./requirements.txt /app
 ADD ./manage.py /app
 ADD ./docker/conf/uwsgi.ini /app
+ADD ./api/templates/favicon.ico /app/api/templates/static
 
 VOLUME /app/db
 VOLUME /app/log
