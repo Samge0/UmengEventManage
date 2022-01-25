@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/1/7 上午11:01
 # @Author  : Samge
+import hashlib
 import json
 import random
 import re
@@ -54,7 +55,7 @@ def get_user(u_name: str, u_pw: str):
     :param u_pw:
     :return:
     """
-    _filter: Q = (Q(u_name=u_name) | Q(u_email=u_name) | Q(u_phone=u_name)) & Q(u_pw=u_pw)
+    _filter: Q = (Q(u_name=u_name) | Q(u_email=u_name) | Q(u_phone=u_name)) & Q(u_pw=get_hash_pw(pw=u_pw))
     users = User.objects.filter(_filter)
     if len(users or []) > 0:
         return users[0]
@@ -135,7 +136,7 @@ def reg(request):
         else:
             u_id: str = get_random_uid()
             u_token: str = create_token(u_id=u_id)
-            User(u_id=u_id, u_name=u_name, u_pw=u_pw, u_phone=u_phone, u_email=u_email, u_token=u_token).save()
+            User(u_id=u_id, u_name=u_name, u_pw=get_hash_pw(pw=u_pw), u_phone=u_phone, u_email=u_email, u_token=u_token).save()
             data: dict = {
                 'u_id': u_id,
                 'u_name': u_name,
@@ -188,3 +189,14 @@ def login(request):
         data=data
     )
     return u_http.get_json_response(r)
+
+
+def get_hash_pw(pw: str) -> str:
+    """
+    获取密码的hash值
+    :param pw:
+    :return:
+    """
+    h = hashlib.sha256()
+    h.update(bytes(pw, encoding='utf-8'))
+    return h.hexdigest()
