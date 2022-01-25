@@ -1,5 +1,5 @@
 ### 一、介绍
-友盟自定义事件多应用同步小工具（django+vue版本）后续计划打为docker包，如需直接运行版本，可以切换到[original](https://gitee.com/samge007/UmengEventManage/tree/original) 分支
+友盟自定义事件多应用同步管理小工具（django+vue版本）
 
 ### 二、运行docker镜像
 
@@ -39,6 +39,7 @@ Supervisor密码：admin
 - 3、在“友盟key”页，选择需要操作的友盟应用
 - 4、配置完成，可进行测试/使用
 
+
 ### 五、相关截图
 
 ![登录页](screenshots/umem_00.png)
@@ -56,3 +57,40 @@ Supervisor密码：admin
 ![事件管理页-筛选](screenshots/umem_41.png)
 
 ![docker运行umem镜像-portainer管理页面](screenshots/umem_50.png)
+
+
+### 六、如需源码编译
+
+- 运行服务端
+  
+    - 安装依赖
+    ```
+      pip install -r requirements.txt
+    ```
+  
+    - 初始化数据库
+    ```
+      python manage.py makemigrations api && python manage.py migrate
+    ```
+  
+    - 运行服务
+    ```
+      python manage.py runserver localhost:8000
+    ```
+
+- 运行前端
+  
+    - 移动到frontend目录下
+    ```
+      cd frontend
+    ```
+  
+    - 安装依赖
+    ```
+      npm i
+    ```
+  
+    - 运行
+    ```
+      npm run serve
+    ```
