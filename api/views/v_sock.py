@@ -79,4 +79,4 @@ class UmConsumer(WebsocketConsumer):
 
         else:
             self.send(f"消息口令不对: {msg_type}")
-            self.send(f"任务已中止")
+            self.send(f"任务中止")

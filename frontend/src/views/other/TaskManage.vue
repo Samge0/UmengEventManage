@@ -27,7 +27,9 @@
 
 
   <!--时间线 打印任务执行进度-->
-    <el-timeline>
+    <el-timeline
+      v-loading="loading"
+    >
       <el-timeline-item
           style="text-align:left"
         v-for="(item, index) in timeLineList"
@@ -102,6 +104,9 @@ export default defineComponent({
   setup() {
     const state = reactive( {
 
+      // 加载框
+      loading: false,
+
       // 上传头加认证信息
       upload_headers: {
         'Authorization': localStorage.getItem("token"),
@@ -142,6 +147,7 @@ export default defineComponent({
      * 中止任务
      */
     const stopTask = () => {
+      state.loading = false
       state.taskType = ''
       let data = {
           'type': 'stop',
@@ -169,8 +175,14 @@ export default defineComponent({
      * 点击执行任务
      */
     const startTask = (taskType: string) => {
+      state.loading = true
       // 每次开始前都清空时间线内容
-      state.timeLineList = []
+      state.timeLineList = [
+        {
+          content: '正在检测并等待其他作业任务完成，请稍后......',
+          timestamp: getCurrDate(),
+        },
+      ],
       state.taskType = taskType
 
       // 初始化websocket并向服务器发送消息, 这个消息内容跟服务端确认保持一致
@@ -187,16 +199,16 @@ export default defineComponent({
      * @param data
      */
     const websocketOnMessage = (msg: any) => {
-        console.log('websocketOnMessage date=', msg);
-        let data: string = msg.data
-        state.timeLineList.push({
-            content: data,
-            timestamp: getCurrDate(),
-          })
-
-        if ('任务执行完毕' == data){
-          state.taskType = ''
-        }
+      state.loading = false
+      console.log('websocketOnMessage date=', msg);
+      let data: string = msg.data
+      state.timeLineList.push({
+        content: data,
+        timestamp: getCurrDate(),
+      })
+      if ('任务中止' == data || '任务完成' == data) {
+        state.taskType = ''
+      }
     }
     
     /**
