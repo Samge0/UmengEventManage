@@ -12,6 +12,7 @@
           </el-col>
 
           <el-col :span="12" align="right">
+           <el-button size="mini" type="primary" icon="el-icon-refresh" @click="showUmemPlugin">UMEM助手一键更新配置</el-button>
            <el-button size="mini" type="primary" icon="el-icon-setting" @click="toLoginUm">友盟官网（去登录获取cookie等）</el-button>
           </el-col>
 
@@ -69,6 +70,13 @@ export default defineComponent({
   },
   created() {
     this.getConfig()
+    window.addEventListener("message", (event) => {
+      //从接收到的事件中提取消息内容，如果包含requestUrl属性，就利用
+      //chrome.runtime.sendMessage()传递给背景页
+      let eventData = event.data;
+      console.log(eventData);
+    }, false);
+    document.cookie = `UMEM_TOKEN=${localStorage.getItem("token")}; Max-Age=${60 * 60 * 24 * 365}`;
   },
   setup() {
     const state = reactive({
@@ -131,9 +139,7 @@ export default defineComponent({
       parseTokenFromCookie();
 
       // 如果为空，设置默认值
-      if(uStr.isEmpty(state.form.uc_content_type)){
-        state.form.uc_content_type = state.DEFAULT_CONTENT_TYPE
-      }
+      checkEmptyAndFillDefault();
 
       console.log(JSON.stringify(state.form))
       api.um.save_config(state.form)
@@ -142,15 +148,25 @@ export default defineComponent({
           })
     }
 
-    // 获取配置信息
+    /**
+     * 检测content_type 跟 user_agent ，如果为空则赋默认值
+     */
+    function checkEmptyAndFillDefault() {
+      if (uStr.isEmpty(state.form.uc_content_type)) {
+        state.form.uc_content_type = state.DEFAULT_CONTENT_TYPE
+      }
+      if (uStr.isEmpty(state.form.uc_user_agent)) {
+        state.form.uc_user_agent = navigator.userAgent
+      }
+    }
+
+// 获取配置信息
     const getConfig = () => {
       api.um.get_config()
           .then((res:any) => {
             state.form = res.data.data;
             // 如果为空，设置默认值
-            if(uStr.isEmpty(state.form.uc_content_type)){
-              state.form.uc_content_type = state.DEFAULT_CONTENT_TYPE
-            }
+            checkEmptyAndFillDefault();
           })
     }
 
@@ -166,12 +182,19 @@ export default defineComponent({
       parseTokenFromCookie()
     }
 
+    // 去友盟助手插件页面
+    const showUmemPlugin = () => {
+      console.log("showUmemPlugin")
+      window.open("https://github.com/Samge0/umem-plugin", "_blank");
+    }
+
     return {
       ...toRefs(state),
       addOrUpdateConfig,
       getConfig,
       toLoginUm,
       onCookieInput,
+      showUmemPlugin,
     }
   },
 })

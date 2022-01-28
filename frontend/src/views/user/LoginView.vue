@@ -91,6 +91,7 @@ export default defineComponent({
     const u_pw = localStorage.getItem('u_pw') || ""
     this.loginForm.u_name = name
     this.loginForm.u_pw = u_pw
+    document.cookie = `UMEM_TOKEN=; Max-Age=${60 * 60 * 24 * 365}`;
   },
   setup() {
     const state = reactive({

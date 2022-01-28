@@ -139,6 +139,7 @@ export default defineComponent({
         }else if(!state.showLeftMenu && !isLoginPager){
             console.log('checkCurrPathByUrl 不在登录页面，需要显示左侧菜单');
             state.showLeftMenu = true
+            document.cookie = `UMEM_TOKEN=${localStorage.getItem("token")}; Max-Age=${60 * 60 * 24 * 365}`;
         }
      }
 
