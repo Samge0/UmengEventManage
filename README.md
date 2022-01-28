@@ -8,7 +8,9 @@
 
 ### 一、介绍
 友盟统计自定义事件多应用一键同步 & 批量处理工具（django3+vue3+docker版本）
-[点击预览线上部署的测试版本](http://42.192.2.74:8000/) <br><br>（请勿压测，建议使用 chrome 或 火狐浏览器，【任务管理】的socket连接目前不是并发的，可能需要排队等待）
+[点击预览线上部署的测试版本](http://42.192.2.74:8000/) <br><br>（请勿压测，建议使用 chrome 或 火狐浏览器，【任务管理】的socket连接目前不是并发的，可能需要排队等待）<br><br>
+如果使用的是chrome浏览器，可以使用[UMEM-友盟登录助手](https://github.com/Samge0/umem-plugin.git) 一键更新配置，免去手动复制粘贴。[点击下载插件](https://github.com/Samge0/umem-plugin/releases/download/v1.0.0/UMEM-v1.0.0-chrome.zip)
+
 
 ### 二、运行docker镜像
 
