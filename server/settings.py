@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 
 # 正式环境需要设置为False
-DEBUG = True
+DEBUG = False
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent
