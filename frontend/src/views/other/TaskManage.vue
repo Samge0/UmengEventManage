@@ -11,11 +11,12 @@
           </el-col>
 
           <el-col :span="12" align="right">
+           <a class="el-button-add" style="margin-right: 20px;" v-loading="isTaskRunning" v-if="isTaskRunning">正在执行...</a>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="timeLineList=[]">清空</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" v-if="false" @click="initWebsocket()">连接sock</el-button>
            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-close" v-if="false" @click="stopTask()">中止任务</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="uploadEvent()">上传/更新事件</el-button>
-           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-phone" @click="startSynTask()">执行【同步】任务</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="uploadEvent()" :disabled="isTaskRunning">上传/更新事件</el-button>
+           <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-phone" @click="startSynTask()" :disabled="isTaskRunning">执行【同步】任务</el-button>
           </el-col>
 
         </el-row>
@@ -31,7 +32,7 @@
       v-loading="loading"
     >
       <el-timeline-item
-          style="text-align:left"
+        style="text-align:left"
         v-for="(item, index) in timeLineList"
         :key="index"
         :timestamp="item.timestamp"
@@ -104,6 +105,9 @@ export default defineComponent({
   setup() {
     const state = reactive( {
 
+      // 任务是否正在执行
+      isTaskRunning: false,
+
       // 加载框
       loading: false,
 
@@ -140,7 +144,7 @@ export default defineComponent({
      */
     const getCurrDate = () => {
       // 向服务器发送消息, 这个消息内容跟服务端确认保持一致
-      return new Date().toDateString()
+      return new Date().toLocaleString()
     }
 
     /**
@@ -148,6 +152,7 @@ export default defineComponent({
      */
     const stopTask = () => {
       state.loading = false
+      state.isTaskRunning = false
       state.taskType = ''
       let data = {
           'type': 'stop',
@@ -176,6 +181,7 @@ export default defineComponent({
      */
     const startTask = (taskType: string) => {
       state.loading = true
+      state.isTaskRunning = true
       // 每次开始前都清空时间线内容
       state.timeLineList = [
         {
@@ -208,6 +214,7 @@ export default defineComponent({
       })
       if ('任务中止' == data || '任务完成' == data) {
         state.taskType = ''
+        state.isTaskRunning = false
       }
     }
     
@@ -332,6 +339,33 @@ export default defineComponent({
       return true
     }
 
+    // 更新本地事件列表
+    const updateUmEvents = (um_key: string) => {
+      state.timeLineList.push({
+        content: `开始更新本地事件列表：${um_key}`,
+        timestamp: getCurrDate(),
+      })
+      const queryBody = {
+        um_key: um_key,
+        refresh: 1,
+        pg_index: 1,
+        pg_size: 15,
+        filter: {},
+      }
+      api.um.um_event(queryBody)
+          .then(() => {
+            state.timeLineList.push({
+              content: `更新本地事件列表成功：${um_key}`,
+              timestamp: getCurrDate(),
+            })
+          }).catch(() => {
+            state.timeLineList.push({
+              content: `更新本地事件失败：${um_key}`,
+              timestamp: getCurrDate(),
+            })
+          })
+    }
+
     return {
       ...toRefs(state),
       stopTask,
@@ -339,6 +373,7 @@ export default defineComponent({
       startSynTask,
       startUpdateTask,
       uploadEvent,
+      updateUmEvents,
 
       initWebsocket,
       closeWebsocket,
