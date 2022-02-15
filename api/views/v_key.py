@@ -30,6 +30,7 @@ def get_um_keys(request):
     um_status: int = post_body.get('um_status') or -1
     refresh: bool = post_body.get('refresh') or False
     reset_name: bool = post_body.get('reset_name') or False
+    keyword: str = post_body.get('keyword') or ''
 
     # 如果需要刷新, 从友盟官网api拉取新的应用列表并存储
     if refresh:
@@ -63,6 +64,8 @@ def get_um_keys(request):
             key.save(force_update=force_update)
     # 重新查数据库
     _filter: Q = Q(u_id=u_id)
+    if keyword:
+        _filter = _filter & Q(um_name__icontains=keyword)
     if um_status >= 0:
         _filter = _filter & Q(um_status=um_status)
     lst = list(UmKey.objects.filter(_filter).values() or [])
