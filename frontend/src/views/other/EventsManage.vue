@@ -30,8 +30,8 @@
 
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-info" @click="openUmLink()">官网链接</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOp(0)">批量暂停</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOp(1)">批量恢复</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOpWithDialog(0, '批量暂停')">批量暂停</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOpWithDialog(1, '批量恢复')">批量恢复</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="uploadEventFile()">上传事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportCurrEvents">导出事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-sort" @click="showDrawer = true;">事件筛选</el-button>
@@ -56,6 +56,7 @@
         <el-table-column prop="um_name" sortable label="事件id" width="300" />
         <el-table-column prop="um_displayName" sortable label="事件名称" width="300" />
         <el-table-column prop="um_eventType" sortable label="事件类型" width="130" />
+        <el-table-column prop="um_status" sortable label="事件状态" width="130" />
         <el-table-column prop="um_countYesterday" sortable label="昨日消息数" width="130" />
         <el-table-column prop="um_countToday" sortable label="今日消息数" width="130" />
         <el-table-column prop="um_deviceYesterday" sortable label="昨日独立用户数" />
@@ -78,7 +79,7 @@
      </el-pagination>
 
 <!--      空页面-->
-     <el-empty description="暂无相关数据" v-show="tableData.length === 0" style="margin-top: 100px">
+     <el-empty description="暂无相关数据，可点击上面【刷新】按钮重试" v-show="tableData.length === 0" style="margin-top: 100px">
        <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload" @click="uploadEventFile()">上传事件</el-button>
      </el-empty>
 
@@ -211,6 +212,7 @@ import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 import router from "@/router";
 import {uStr} from "@/utils/uStr";
+import {ElMessageBox} from "element-plus";
 
 
 export default defineComponent({
@@ -319,12 +321,20 @@ export default defineComponent({
         return
       }
       state.loading = true
+      state.query.filter = state.filterForm
       api.um.um_event(state.query)
           .then((res: any) => {
-            state.tableData = res.data.data.lst
-            state.total = res.data.data.total
-            state.query.refresh = 0
-            state.loading = false
+            if(state.query.refresh === 0 && res.data.data.total === 0){
+              console.log("如果请求本地数据库 且 请求结果为空，则尝试从远程api获取数据进行刷新")
+              state.query.refresh = 1
+              getUmEvents()
+            }else{
+              state.tableData = res.data.data.lst
+              state.total = res.data.data.total
+              state.query.refresh = 0
+              state.loading = false
+            }
+
           }).catch(() => {
             state.tableData = []
             state.loading = false
@@ -352,8 +362,8 @@ export default defineComponent({
       state.dialogCommitTitle = "更新"
     }
 
-    // 批量暂停/ 批量恢复
-    const parseEventOp = (op_type: number) => {
+    // 批量暂停/ 批量恢复 , 操作前弹出对话框进行确认
+    const parseEventOpWithDialog = (op_type: number, tip: string) => {
       if(!checkUmKey()){
         return
       }
@@ -361,14 +371,41 @@ export default defineComponent({
         toast.showWarning("请先选择要操作的数据")
         return
       }
-      let body = {
-        'um_key': state.query.um_key,
-        'op_type': op_type,
-        'ids': state.ids
+
+      const newTip = `【${tip}】 ${state.ids.length} 条自定义事件`
+
+      ElMessageBox.confirm(
+      `确定要${newTip}？`,
+      '温馨提示',
+      {
+        distinguishCancelAndClose: true,
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
       }
+    )
+      .then(() => {
+        parseEventOp(op_type, newTip)
+      })
+      .catch((action: string) => {
+        // cancel  or  close
+        console.log(action)
+        /*if(action === 'cancel'){
+        }else{
+        }*/
+      })
+    }
+
+    // 批量暂停/ 批量恢复
+    const parseEventOp = (op_type: number, tip: string) => {
+      let body = {
+          'um_key': state.query.um_key,
+          'op_type': op_type,
+          'ids': state.ids
+        }
       api.um.um_event_op(body)
           .then(() => {
             getUmEvents()
+            toast.showSuccess(`${tip}成功`)
           })
     }
 
@@ -511,6 +548,7 @@ export default defineComponent({
 
       editHost,
       parseEventOp,
+      parseEventOpWithDialog,
       onCurrentPageChange,
       onPageSizeChange,
       exportCurrEvents,
