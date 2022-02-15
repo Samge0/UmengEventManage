@@ -102,9 +102,9 @@ def um_event(request):
     need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
 
     if need_refresh:
-        results: list = list(um_tasks.get_analysis_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
+        results: list = list(um_tasks.get_all_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
         # 将新结果插入数据库
-        insert_event(u_id=u_id, results=results)
+        # insert_event(u_id=u_id, results=results)
         # 重新查询数据库
         results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     else:
@@ -121,39 +121,78 @@ def um_event(request):
     return u_http.get_json_response(r)
 
 
-def insert_event(u_id: str, results: list):
-    """
-    将友盟自定义事件插入数据库
-    :param u_id:
-    :param results:
-    :return:
-    """
-    print('将友盟自定义事件插入数据库')
-    curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    for item in results or []:
-        um_md5: str = u_md5.get_event_md5(u_id, item.get('um_eventId'), curr_date)
-        events = UmEventModel.objects.filter(um_md5=um_md5)
-        force_update: bool = True if events and len(events) > 0 else False
+# def insert_event(u_id: str, results: list):
+#     """
+#     将友盟自定义事件插入数据库，改为 bulk_create 方式批量插入
+#     :param u_id:
+#     :param results:
+#     :return:
+#     """
+#     if not results or len(results) == 0:
+#         return
+#
+#     print('将友盟自定义事件插入数据库')
+#     um_key: str = results[0].get('um_key')
+#     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+#
+#     # 批量移除数据
+#     _q: Q = Q(u_id=u_id) & Q(um_key=um_key) & Q(um_date=curr_date)
+#     UmEventModel.objects.filter(_q).delete()
+#
+#     # 批量插入新数据
+#     product_list_to_insert = list()
+#     for item in results or []:
+#         um_md5: str = u_md5.get_event_md5(u_id, item.get('um_eventId'), curr_date)
+#         key = UmEventModel(um_md5=um_md5)
+#         key.u_id = u_id
+#         key.um_key = item.get('um_key')
+#         key.um_eventId = item.get('um_eventId')
+#         key.um_name = item.get('um_name')
+#         key.um_displayName = item.get('um_displayName')
+#         key.um_status = item.get('um_status')
+#         key.um_eventType = item.get('um_eventType_int')
+#         key.um_countToday = item.get('um_countToday')
+#         key.um_countYesterday = item.get('um_countYesterday')
+#         key.um_deviceYesterday = item.get('um_deviceYesterday')
+#         key.um_date = curr_date
+#         product_list_to_insert.append(key)
+#     UmEventModel.objects.bulk_create(product_list_to_insert)
+#     print('批量入库完成')
 
-        # 保存/更新入库
-        if force_update:
-            key = events[0]
-        else:
-            key = UmEventModel(um_md5=um_md5)
 
-        key.u_id = u_id
-        key.um_key = item.get('um_key')
-        key.um_eventId = item.get('um_eventId')
-        key.um_name = item.get('um_name')
-        key.um_displayName = item.get('um_displayName')
-        key.um_status = item.get('um_status')
-        key.um_eventType = item.get('um_eventType_int')
-        key.um_countToday = item.get('um_countToday')
-        key.um_countYesterday = item.get('um_countYesterday')
-        key.um_deviceYesterday = item.get('um_deviceYesterday')
-        key.um_date = curr_date
-        key.save(force_update=force_update)
-    print('入库完成')
+# def insert_event(u_id: str, results: list):
+#     """
+#     将友盟自定义事件插入数据库 单条更新/插入
+#     :param u_id:
+#     :param results:
+#     :return:
+#     """
+#     print('将友盟自定义事件插入数据库')
+#     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+#     for item in results or []:
+#         um_md5: str = u_md5.get_event_md5(u_id, item.get('um_eventId'), curr_date)
+#         events = UmEventModel.objects.filter(um_md5=um_md5)
+#         force_update: bool = True if events and len(events) > 0 else False
+#
+#         # 保存/更新入库
+#         if force_update:
+#             key = events[0]
+#         else:
+#             key = UmEventModel(um_md5=um_md5)
+#
+#         key.u_id = u_id
+#         key.um_key = item.get('um_key')
+#         key.um_eventId = item.get('um_eventId')
+#         key.um_name = item.get('um_name')
+#         key.um_displayName = item.get('um_displayName')
+#         key.um_status = item.get('um_status')
+#         key.um_eventType = item.get('um_eventType_int')
+#         key.um_countToday = item.get('um_countToday')
+#         key.um_countYesterday = item.get('um_countYesterday')
+#         key.um_deviceYesterday = item.get('um_deviceYesterday')
+#         key.um_date = curr_date
+#         key.save(force_update=force_update)
+#     print('入库完成')
 
 
 def get_events_from_db(u_id: str, um_key: str, curr_date: str, filter_dict: dict):
@@ -283,7 +322,7 @@ def um_event_export(request):
     if check_result_response:
         return check_result_response
 
-    results: list = list(um_tasks.get_analysis_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
+    results: list = list(um_tasks.get_all_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
     txt: str = None
     for item in results:
         if txt:

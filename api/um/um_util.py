@@ -9,9 +9,12 @@ import re
 import time
 
 import requests as requests
+from django.db.models import Q
 
 from . import urls
+from ..models import UmEventModel
 from ..um import file_util
+from ..utils import u_md5
 from ..views import v_config
 
 true = True
@@ -96,6 +99,9 @@ class UmTask(object):
     
         # 重新下载最新的友盟自定义事件并覆盖本地缓存
         self.refresh_local_file(um_key=um_key, step_tip=9)
+
+        # 刷新本地数据库的友盟自定义事件
+        self.refresh_local_db_events(um_key=um_key)
     
         self._print_tip(f'==============>>所有操作已完成：{um_key}\n 点击 https://mobile.umeng.com/platform/{um_key}/setting/event/list 查看')
     
@@ -580,7 +586,6 @@ class UmTask(object):
         else:
             self._print_tip(f'批量复制 自定义事件 失败：{self.get_fail_msg(um_key=um_key, r=r)}')
     
-    
     def upload_event(self, um_key: str, file_path: str):
         """
         批量导入/批量上传 自定义事件
@@ -768,3 +773,50 @@ class UmTask(object):
         self.stop = True
         self.u_id = None
         self.um_socks = None
+
+    def refresh_local_db_events(self, um_key):
+        """
+        刷新本地数据库的友盟自定义事件
+        :param um_key:
+        :return:
+        """
+        self.cache_analysis_event_list(um_keys=[um_key])
+        results: list = list(self.get_all_events_with_analysis(um_key=um_key))
+        self.insert_event(results=results)
+
+    def insert_event(self, results: list):
+        """
+        将友盟自定义事件插入数据库，改为 bulk_create 方式批量插入
+        :param results:
+        :return:
+        """
+        if not results or len(results) == 0:
+            return
+
+        self._print_tip('将友盟自定义事件插入数据库')
+        um_key: str = results[0].get('um_key')
+        curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+
+        # 批量移除表中旧数据
+        _q: Q = Q(u_id=self.u_id) & Q(um_key=um_key)
+        UmEventModel.objects.filter(_q).delete()
+
+        # 批量插入新数据
+        product_list_to_insert = list()
+        for item in results or []:
+            um_md5: str = u_md5.get_event_md5(self.u_id, item.get('um_eventId'), curr_date)
+            key = UmEventModel(um_md5=um_md5)
+            key.u_id = self.u_id
+            key.um_key = item.get('um_key')
+            key.um_eventId = item.get('um_eventId')
+            key.um_name = item.get('um_name')
+            key.um_displayName = item.get('um_displayName')
+            key.um_status = item.get('um_status')
+            key.um_eventType = item.get('um_eventType_int')
+            key.um_countToday = item.get('um_countToday')
+            key.um_countYesterday = item.get('um_countYesterday')
+            key.um_deviceYesterday = item.get('um_deviceYesterday')
+            key.um_date = curr_date
+            product_list_to_insert.append(key)
+        UmEventModel.objects.bulk_create(product_list_to_insert)
+        self._print_tip('自定义事件批量入库/更新完成')

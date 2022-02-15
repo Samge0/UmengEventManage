@@ -34,17 +34,21 @@ def do_add_or_update_task(u_id: str, um_socks) -> UmTask:
     key_master, key_slaves = _get_um_key_config(u_id=u_id)
     if not key_master:
         return None
+    # 根据友盟key获取对应的自定义事件列表最新数据并缓存到本地
     task.cache_event_list(um_keys=[key_master] + list(key_slaves))
+    # 添加自定义事件，如果自定义事件已存在，则自动更新自定义事件显示名
     task.add_or_update_event_by_file(um_key=key_master)
+    # 刷新本地数据库的友盟自定义事件
+    task.refresh_local_db_events(um_key=key_master)
     return task
 
 
-def get_analysis_event_list(u_id: str, um_key: str, refresh: bool):
+def get_all_event_list(u_id: str, um_key: str, refresh: bool):
     """
-    获取友盟自定义事件列表
+    获取友盟所有自定义事件列表（有效的&暂停的）
     :param u_id:
     :param um_key:
-    :param refresh: 是否需要重新充网络中获取数据
+    :param refresh: 是否需要从网络中重新获取数据
     :return:
     """
     task: UmTask = UmTask(u_id=u_id, um_socks=None)
@@ -56,7 +60,10 @@ def get_analysis_event_list(u_id: str, um_key: str, refresh: bool):
         print(f'获取友盟自定义事件列表 需要刷新')
         task.cache_analysis_event_list(um_keys=[um_key])
     print(f'获取友盟自定义事件列表 直接从缓存中取')
-    return task.get_all_events_with_analysis(um_key=um_key)
+    results: list = task.get_all_events_with_analysis(um_key=um_key)
+    if need_refresh:
+        task.insert_event(results=results)
+    return results
 
 
 def _get_um_key_config(u_id: str) -> (str, list):
