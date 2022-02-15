@@ -93,6 +93,20 @@
         direction="rtl"
         :before-close="onDrawerClose"
       >
+
+<!--        搜索关键词-->
+        <el-input v-model="searchKey"
+                  autocomplete="off"
+                  minlength="0"
+                  maxlength="20"
+                  show-word-limit="true"
+                  placeholder="请输入搜索关键词"
+                  clearable="true"
+                  @input="onSearchKeyInput"
+                  class="infinite-list-item"
+                  style="width: auto; margin-right: 35px;"
+          />
+
 <!--          空页面-->
           <el-empty description="暂无相关数据" v-show="allKeyList.length === 0" style="margin-top: 100px">
              <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-plus" @click="this.$router.push('/other/config')">更新配置</el-button>
@@ -103,8 +117,8 @@
             <li v-for="i in allKeyList" :key="i" class="infinite-list-item">
                 <a style="width: 80%; align-items: flex-start">{{i.um_name}}</a>
                 <div style="width: 20%;">
-                  <el-button size="mini" type="primary" icon="el-icon-circle-plus-outline" @click="i.um_status=1; addApp(i.um_name, i.um_key)" v-if="i.um_status==0">添加</el-button>
-                  <el-button size="mini" type="danger" icon="el-icon-remove-outline" @click="i.um_status=0; removeApp(i.um_name, i.um_key)" v-if="i.um_status==1">移除</el-button>
+                  <el-button size="mini" type="primary" icon="el-icon-circle-plus-outline" @click="i.um_status=1; addApp(i.um_name, i.um_key)" v-if="i.um_status===0">添加</el-button>
+                  <el-button size="mini" type="danger" icon="el-icon-remove-outline" @click="i.um_status=0; removeApp(i.um_name, i.um_key)" v-if="i.um_status===1">移除</el-button>
                 </div>
             </li>
           </ul>
@@ -120,10 +134,12 @@ import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 export default defineComponent({
   created() {
+    this.searchKey = localStorage.getItem('um_searchKey') || ''
     this.getUmKeys()
   },
   setup() {
     const state = reactive({
+      searchKey: '',
       showDrawer: false,
       refreshDrawer: false,
       resetDisplayName: false,
@@ -154,14 +170,19 @@ export default defineComponent({
      * 获取所有应用列表
      */
     const getUmApps = () => {
-      api.um.get_um_keys({'um_status': -1, 'reset_name': state.resetDisplayName, 'refresh': state.refreshDrawer || state.allKeyList.length == 0})
+      const _q = {
+        'um_status': -1,
+        'reset_name': state.resetDisplayName,
+        'refresh': state.refreshDrawer || state.allKeyList.length === 0,
+        'keyword': state.searchKey
+      }
+      api.um.get_um_keys(_q)
           .then((res:any) => {
             state.allKeyList = res.data.data
             state.refreshDrawer = false
             state.resetDisplayName = false
           })
     }
-
 
     /**
      * 从数据库中获取已保存的友盟key
@@ -282,6 +303,13 @@ export default defineComponent({
       getUmApps()
     }
 
+    // 关键词输入监听
+    const onSearchKeyInput = () => {
+      console.log("关键词输入监听")
+      localStorage.setItem('um_searchKey', state.searchKey)
+      getUmApps()
+    }
+
     return {
       ...toRefs(state),
       addOrUpdateKey,
@@ -295,6 +323,8 @@ export default defineComponent({
 
       addApp,
       removeApp,
+
+      onSearchKeyInput,
     }
   },
 })
@@ -309,13 +339,14 @@ export default defineComponent({
 }
 
 .infinite-list {
-  height: 65%;
+  height: calc(100vh - 16vh);
   padding: 0;
   margin: 0;
   list-style: none;
   overflow-y:scroll;
 }
-.infinite-list .infinite-list-item {
+
+.infinite-list-item {
   display: flex;
   align-items: center;
   height: 40px;
