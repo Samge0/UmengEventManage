@@ -113,8 +113,8 @@ export default defineComponent({
     }
 
     function isBadCookie() {
-      return state.form.uc_cookie.search('XSRF-TOKEN-HAITANG') == -1
-          && state.form.uc_cookie.search('XSRF-TOKEN-HAITANG') == -1;
+      return state.form.uc_cookie.search('XSRF-TOKEN') === -1
+          && state.form.uc_cookie.search('XSRF-TOKEN-HAITANG') === -1;
     }
 
 // 保存/更新 配置
