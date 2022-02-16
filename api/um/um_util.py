@@ -158,7 +158,8 @@ class UmTask(object):
                             um_key=um_key,
                             event_id=item.get('eventId'),
                             display_name=display_name,
-                            eventType=eventType
+                            eventType=eventType,
+                            key_name=key_name
                         )
                         time.sleep(SLEEP_TIME)
                         break
@@ -328,37 +329,42 @@ class UmTask(object):
         else:
             self._print_tip(f'获取自定义事件列表（暂停的）失败：{self.get_fail_msg(um_key=um_key, r=r)}')
 
-    def edit_event(self, um_key: str, event_id: str, display_name: str, eventType: str):
+    def edit_event(self, um_key: str, event_id: str, display_name: str, eventType: str, key_name: str):
         """
         修改 自定义事件
         :param um_key: 友盟key，每隔应用单独的key
         :param event_id: 自定义事件id
         :param display_name: 自定义事件显示的名称
         :param eventType: 自定义事件类型
+        :param key_name: 自定义事件id名称
         :return:
         """
         url: str = urls.API_EVENT_EDIT.format(BASE_URL=urls.BASE_URL, um_key=um_key)
+        display_name: str = self.check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None)
         data: dict = {
             "appkey": um_key,
-            "displayName": display_name or f'暂无描述_{random.randint(0, 1000)}',
+            "displayName": display_name,
             "propertyStatus": "normal",
             "eventType": eventType,
-            "propertyList": [],
+            "propertyList": [{"name": key_name, "displayName": key_name, "propertyType": "string"}],
             "eventId": event_id,
             "relatedId": um_key,
             "dataSourceId": um_key
         }
         r = self.do_post(url, data)
         if self.is_response_ok(r):
-            self._print_tip(f'修改自定义事件 成功：{display_name} {event_id} {um_key} \n【响应结果】：{r.text[:LOG_LEN]}......')
+            self._print_tip(f'修改自定义事件 成功：{display_name} {key_name} {um_key} \n【响应结果】：{r.text[:LOG_LEN]}......')
             return True
         else:
-            if '事件名称已存在' in self.get_eval_dict(r.text).get("msg"):
+            if self.is_same_display_name(r):
+                self._print_tip(f'该事件显示名称已存在，尝试增加随机数后重新修改：{display_name} {event_id} {um_key} \n【相关判断依据：响应结果】：{r.text[:LOG_LEN]}......')
+                time.sleep(SLEEP_TIME)
                 return self.edit_event(
                     um_key=um_key,
                     event_id=event_id,
-                    display_name=f'{display_name}_{random.randint(0, 1000)}',
-                    eventType=eventType
+                    display_name=self.check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None),
+                    eventType=eventType,
+                    key_name=key_name
                 )
             else:
                 self._print_tip(f'修改自定义事件 失败：{display_name} {event_id} {self.get_fail_msg(um_key=um_key, r=r)}')
@@ -376,9 +382,10 @@ class UmTask(object):
             self._print_tip("自定义事件的key名不能为空")
             raise ValueError("自定义事件的key名不能为空")
         url: str = urls.API_EVENT_ADD.format(BASE_URL=urls.BASE_URL, um_key=um_key)
+        display_name: str = self.check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None)
         data: dict = {
             "appkey": um_key,
-            "displayName": display_name or f'暂无描述_{um_key}',
+            "displayName": display_name,
             "name": key_name,
             "eventType": eventType,
             "relatedId": um_key,
@@ -389,16 +396,46 @@ class UmTask(object):
             self._print_tip(f'添加自定义事件 成功：{display_name} {key_name} {um_key} \n【响应结果】：{r.text[:LOG_LEN]}......')
             return True
         else:
-            if '事件名称已存在' in self.get_eval_dict(r.text).get("msg"):
-                return self.edit_event(
+            if self.is_same_display_name(r):
+                self._print_tip(f'该事件显示名称已存在，尝试增加随机数后重新添加：{display_name} {key_name} {um_key} \n【相关判断依据：响应结果】：{r.text[:LOG_LEN]}......')
+                time.sleep(SLEEP_TIME)
+                return self.add_event(
                     um_key=um_key,
                     key_name=key_name,
-                    display_name=f'{display_name}_{random.randint(0, 1000)}',
+                    display_name=self.check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None),
                     eventType=eventType
                 )
             else:
                 self._print_tip(f'添加自定义事件 失败：{display_name} {key_name} {self.get_fail_msg(um_key=um_key, r=r)}')
                 return False
+
+    def check_display_name(self, um_key: str, display_name: str, display_name_lst: list = None) -> str:
+        """
+        检查一个显示名是否符合要求，不符合要求则直接返回一个新的显示名：
+            1、如果显示名已经存在 -》 增加随机数后再次检查
+            2、如果显示名不存在，则返回 暂无描述_随机码
+        :param um_key:
+        :param display_name:
+        :param display_name_lst:
+        :return:
+        """
+        display_name = display_name or '暂无描述'
+        display_name_lst: list = display_name_lst or self.get_display_name_list(um_key=um_key) or []
+        if display_name in display_name_lst:
+            new_display_name: str = f'{display_name}_{random.randint(0, 1000)}'
+            self._print_tip(f'该事件显示名称已存在，尝试增加随机数后重新添加：{display_name} => {new_display_name}')
+            return self.check_display_name(um_key=um_key, display_name=new_display_name, display_name_lst=display_name_lst)
+        else:
+            return display_name
+
+    def is_same_display_name(self, r):
+        """
+        是否已经存在相同显示名称
+        :param r:
+        :return:
+        """
+        temp_dict: dict = self.get_eval_dict(r.text)
+        return '事件名称已存在' in temp_dict.get("msg") or temp_dict.get('code') == 2030140000
 
     def is_response_ok(self, r):
         """
@@ -486,7 +523,13 @@ class UmTask(object):
                 display_name = re.sub(r'[，（()）]', '', item.get('displayName') or '')\
                     .replace('/', '_').replace('][', '_').replace('[', '').replace(']', '')
                 self._print_tip(f'正在更新：{event_id} {display_name}')
-                is_succeed = self.edit_event(um_key=um_key, event_id=event_id, display_name=display_name)
+                is_succeed = self.edit_event(
+                    um_key=um_key,
+                    event_id=event_id,
+                    display_name=display_name,
+                    eventType='calculation',
+                    key_name=item.get('name')
+                )
                 if is_succeed:
                     succeed_count += 1
                 else:
@@ -496,6 +539,17 @@ class UmTask(object):
             self._print_tip('暂无需要更新（multiattribute -》 calculation）的数据。')
         else:
             self._print_tip(f'更新完成：成功{succeed_count}，失败{fail_count}')
+
+    def get_display_name_list(self, um_key: str):
+        """
+        获取一个友盟应用当前所有的显示名列表
+        :param um_key:
+        :return:
+        """
+        json_dict = self.get_eval_dict(file_util.read_txt_file(f'{self.get_temp_file_dir()}/event_lst_{um_key}.txt') or '{}')
+        json_dict_pause = self.get_eval_dict(file_util.read_txt_file(f'{self.get_temp_file_dir()}/event_lst_{um_key}_pause.txt') or '{}')
+        lst = list(self.get_event_list(json_dict=json_dict)) + list(self.get_event_list(json_dict=json_dict_pause))
+        return ['%s' % item.get('displayName') for item in lst]
 
     def update_event_display_name(self, um_key: str, um_key_master: str):
         """
@@ -521,7 +575,8 @@ class UmTask(object):
                             um_key=um_key,
                             event_id=item.get('eventId'),
                             display_name=item_source.get('displayName'),
-                            eventType=item_source.get('eventType')
+                            eventType=item_source.get('eventType'),
+                            key_name=item.get('name')
                         )
 
     def update_display_name_to_key_name(self, um_key: str, key_word: str):
@@ -550,7 +605,8 @@ class UmTask(object):
                     um_key=um_key,
                     event_id=item.get('eventId'),
                     display_name=key_name,
-                    eventType=eventType
+                    eventType=eventType,
+                    key_name=item.get('name')
                 )
 
     def get_event_list(self, json_dict: dict):
