@@ -23,8 +23,6 @@ class api {
 
     // 友盟事件管理
     um_event: (params?: any) => Request.post('/api/um_event', params),
-    // 友盟事件管理-导出事件到txt
-    um_event_export: (params?: any) => Request.post('/api/um_event_export', params),
     // 友盟事件管理-批量暂停/批量恢复
     um_event_op: (params?: any) => Request.post('/api/um_event_op', params),
     // 友盟事件管理-批量导入事件

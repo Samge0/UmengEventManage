@@ -426,18 +426,6 @@ export default defineComponent({
       saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
     }
 
-    // 导出所有事件
-    const exportAllEvents = () => {
-      if(!checkUmKey()){
-        return
-      }
-      api.um.um_event_export(state.query)
-          .then((res:any) => {
-            let blobTxt = new Blob([res.data.data], {type: 'text/plain;charset=utf-8'});
-            saveAs(blobTxt, `友盟自定义事件_${state.query.um_key}.txt`);
-          })
-    }
-
     // 上传自定义事件文件
     const uploadEventFile = () => {
       if(!checkUmKey()){
@@ -552,7 +540,6 @@ export default defineComponent({
       onCurrentPageChange,
       onPageSizeChange,
       exportCurrEvents,
-      exportAllEvents,
       uploadEventFile,
 
       handleSelectionChange,

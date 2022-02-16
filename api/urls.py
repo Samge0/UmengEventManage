@@ -20,7 +20,6 @@ urlpatterns = [
     url(r'save_config$', save_config),
 
     url(r'um_event$', um_event),
-    url(r'um_event_export$', um_event_export),
     url(r'um_event_import$', um_event_import),
     url(r'um_event_update$', um_event_update),
     url(r'um_event_op$', um_event_op),

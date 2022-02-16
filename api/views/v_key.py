@@ -35,7 +35,7 @@ def get_um_keys(request):
     # 如果需要刷新, 从友盟官网api拉取新的应用列表并存储
     if refresh:
         task: UmTask = UmTask(u_id=u_id, um_socks=None)
-        lst_app, msg, code = task.query_app_list()
+        lst_app, msg, code = task.down_um_apps()
         if code != 200:
             r = u_http.get_r_dict(
                 code=code,

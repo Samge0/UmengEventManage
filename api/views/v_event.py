@@ -54,10 +54,10 @@ def um_event_op(request):
 
     task: UmTask = UmTask(u_id=u_id, um_socks=None)
     if op_type == 0:
-        task.event_pause(um_key=um_key, ids=ids)
+        task.pause_event(um_key=um_key, ids=ids)
         UmEventModel.objects.filter(_filter).update(um_status='stopped')
     else:
-        task.event_restore(um_key=um_key, ids=ids)
+        task.restore_event(um_key=um_key, ids=ids)
         UmEventModel.objects.filter(_filter).update(um_status='normal')
     r = u_http.get_r_dict(
         code=200,
@@ -102,9 +102,7 @@ def um_event(request):
     need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
 
     if need_refresh:
-        results: list = list(um_tasks.get_all_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
-        # 将新结果插入数据库
-        # insert_event(u_id=u_id, results=results)
+        um_tasks.load_analysis_event_file(u_id=u_id, um_key=um_key, refresh=refresh)
         # 重新查询数据库
         results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     else:
@@ -119,80 +117,6 @@ def um_event(request):
         }
     )
     return u_http.get_json_response(r)
-
-
-# def insert_event(u_id: str, results: list):
-#     """
-#     将友盟自定义事件插入数据库，改为 bulk_create 方式批量插入
-#     :param u_id:
-#     :param results:
-#     :return:
-#     """
-#     if not results or len(results) == 0:
-#         return
-#
-#     print('将友盟自定义事件插入数据库')
-#     um_key: str = results[0].get('um_key')
-#     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-#
-#     # 批量移除数据
-#     _q: Q = Q(u_id=u_id) & Q(um_key=um_key) & Q(um_date=curr_date)
-#     UmEventModel.objects.filter(_q).delete()
-#
-#     # 批量插入新数据
-#     product_list_to_insert = list()
-#     for item in results or []:
-#         um_md5: str = u_md5.get_event_md5(u_id, item.get('um_eventId'), curr_date)
-#         key = UmEventModel(um_md5=um_md5)
-#         key.u_id = u_id
-#         key.um_key = item.get('um_key')
-#         key.um_eventId = item.get('um_eventId')
-#         key.um_name = item.get('um_name')
-#         key.um_displayName = item.get('um_displayName')
-#         key.um_status = item.get('um_status')
-#         key.um_eventType = item.get('um_eventType_int')
-#         key.um_countToday = item.get('um_countToday')
-#         key.um_countYesterday = item.get('um_countYesterday')
-#         key.um_deviceYesterday = item.get('um_deviceYesterday')
-#         key.um_date = curr_date
-#         product_list_to_insert.append(key)
-#     UmEventModel.objects.bulk_create(product_list_to_insert)
-#     print('批量入库完成')
-
-
-# def insert_event(u_id: str, results: list):
-#     """
-#     将友盟自定义事件插入数据库 单条更新/插入
-#     :param u_id:
-#     :param results:
-#     :return:
-#     """
-#     print('将友盟自定义事件插入数据库')
-#     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-#     for item in results or []:
-#         um_md5: str = u_md5.get_event_md5(u_id, item.get('um_eventId'), curr_date)
-#         events = UmEventModel.objects.filter(um_md5=um_md5)
-#         force_update: bool = True if events and len(events) > 0 else False
-#
-#         # 保存/更新入库
-#         if force_update:
-#             key = events[0]
-#         else:
-#             key = UmEventModel(um_md5=um_md5)
-#
-#         key.u_id = u_id
-#         key.um_key = item.get('um_key')
-#         key.um_eventId = item.get('um_eventId')
-#         key.um_name = item.get('um_name')
-#         key.um_displayName = item.get('um_displayName')
-#         key.um_status = item.get('um_status')
-#         key.um_eventType = item.get('um_eventType_int')
-#         key.um_countToday = item.get('um_countToday')
-#         key.um_countYesterday = item.get('um_countYesterday')
-#         key.um_deviceYesterday = item.get('um_deviceYesterday')
-#         key.um_date = curr_date
-#         key.save(force_update=force_update)
-#     print('入库完成')
 
 
 def get_events_from_db(u_id: str, um_key: str, curr_date: str, filter_dict: dict):
@@ -296,45 +220,6 @@ def get_min_max(count_limit, key_min, key_max):
     _min: int = count_limit.get(key_min) if count_limit.get(key_min) is not None else -1
     _min: int = _max if _min > _max else _min
     return _min, _max
-
-
-@check_login
-@require_http_methods(["POST"])
-def um_event_export(request):
-    """
-    导出所有友盟自定义事件
-    :param request:
-    :return:
-    """
-    u_id: str = u_http.get_uid(request)
-
-    post_body = json.loads(request.body)
-    um_key: str = post_body.get('um_key')
-    refresh: bool = post_body.get('refresh') == 1
-
-    # 判断友盟key
-    check_result_response = check_um_key(um_key=um_key)
-    if check_result_response:
-        return check_result_response
-
-    # 判断友盟登录状态
-    check_result_response = check_um_status(u_id=u_id, um_key=um_key)
-    if check_result_response:
-        return check_result_response
-
-    results: list = list(um_tasks.get_all_event_list(u_id=u_id, um_key=um_key, refresh=refresh))
-    txt: str = None
-    for item in results:
-        if txt:
-            txt = f"{txt}\n{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
-        else:
-            txt = f"{item.get('um_name')},{item.get('um_displayName')},{item.get('um_eventType_int')}"
-    r = u_http.get_r_dict(
-        code=200,
-        msg='查询成功',
-        data=txt
-    )
-    return u_http.get_json_response(r)
 
 
 @check_login
