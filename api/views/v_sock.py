@@ -54,6 +54,7 @@ class UmConsumer(WebsocketConsumer):
         if '{' in text_data:
             text_data_json = json.loads(text_data) or {}
             msg_type = text_data_json.get('type')
+
         if 'syn' == msg_type:
             self.send(f"开始执行任务")
             self.um_task = um_tasks.do_um_synchro_task(u_id=self.u_id, um_socks=self)
@@ -61,6 +62,7 @@ class UmConsumer(WebsocketConsumer):
                 self.send(f"任务完成")
             else:
                 self.send(f"任务中止")
+            self.clear()
 
         elif 'update' == msg_type:
             self.send(f"开始执行任务")
@@ -69,6 +71,7 @@ class UmConsumer(WebsocketConsumer):
                 self.send(f"任务完成")
             else:
                 self.send(f"任务中止")
+            self.clear()
 
         elif 'stop' == msg_type:
             self.send(f"断开上一个连接")

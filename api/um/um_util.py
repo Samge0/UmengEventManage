@@ -6,6 +6,7 @@ import json
 import os.path
 import random
 import re
+import shutil
 import time
 
 import requests as requests
@@ -848,6 +849,11 @@ class UmTask(object):
             self.um_socks.send(tip)
 
     def clear(self):
+        try:
+            shutil.rmtree(self.get_temp_file_dir())
+            self._print_tip("已清除临时文件 & 临时变量")
+        except Exception as e:
+            self._print_tip(f"清除临时文件 & 临时变量 失败：{e}")
         self.stop = True
         self.u_id = None
         self.um_socks = None
