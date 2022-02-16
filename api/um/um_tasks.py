@@ -75,5 +75,10 @@ def _get_um_key_config(u_id: str) -> (str, list):
     values = UserConfig.objects.filter(u_id=u_id).values() or []
     if len(values) == 0:
         return '', []
-    return values[0].get('uc_key_master'), values[0].get('uc_key_slaves').split('|')
+    uc_key_master: str = values[0].get('uc_key_master')
+    uc_key_slaves: str = values[0].get('uc_key_slaves')
+    if uc_key_slaves:
+        return uc_key_master, uc_key_slaves.split('|')
+    else:
+        return uc_key_master, []
 
