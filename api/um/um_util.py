@@ -28,6 +28,11 @@ SLEEP_TIME = 1
 # log长度截断的字符长度
 LOG_LEN = 300
 
+# 起始标记符: 在判断"自定义事件显示名称是否已存在"时使用到
+TAG_START = '￥-S-T-A-R-T-￥'
+# 结束标记符：在判断"自定义事件显示名称是否已存在"时使用到
+TAG_END = '￥-E—N-D-￥'
+
 
 class UmTask(object):
 
@@ -178,7 +183,7 @@ class UmTask(object):
         :return:
         """
         url: str = urls.API_EVENT_EDIT.format(BASE_URL=urls.BASE_URL, um_key=um_key)
-        display_name: str = self._check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None)
+        display_name: str = self._check_display_name(um_key=um_key, display_name=display_name, key_name=key_name, display_name_lst=None)
         data: dict = {
             "appkey": um_key,
             "displayName": display_name,
@@ -200,7 +205,7 @@ class UmTask(object):
                 return self.edit_event(
                     um_key=um_key,
                     event_id=event_id,
-                    display_name=self._check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None),
+                    display_name=self._check_display_name(um_key=um_key, display_name=display_name, key_name=key_name, display_name_lst=None),
                     eventType=eventType,
                     key_name=key_name
                 )
@@ -220,7 +225,7 @@ class UmTask(object):
             self._print_tip("自定义事件的key名不能为空")
             raise ValueError("自定义事件的key名不能为空")
         url: str = urls.API_EVENT_ADD.format(BASE_URL=urls.BASE_URL, um_key=um_key)
-        display_name: str = self._check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None)
+        display_name: str = self._check_display_name(um_key=um_key, display_name=display_name, key_name=key_name, display_name_lst=None)
         data: dict = {
             "appkey": um_key,
             "displayName": display_name,
@@ -240,7 +245,7 @@ class UmTask(object):
                 return self.add_event(
                     um_key=um_key,
                     key_name=key_name,
-                    display_name=self._check_display_name(um_key=um_key, display_name=display_name, display_name_lst=None),
+                    display_name=self._check_display_name(um_key=um_key, display_name=display_name, key_name=key_name, display_name_lst=None),
                     eventType=eventType
                 )
             else:
@@ -387,23 +392,37 @@ class UmTask(object):
     # ------------------------------------------ 下载 & 检测状态 & 更新数据库 end ----------------------------------------
 
     # ------------------------------------------ 显示名处理 start ----------------------------------------
-    def _check_display_name(self, um_key: str, display_name: str, display_name_lst: list = None) -> str:
+    def _check_display_name(self, um_key: str, display_name: str, key_name: str, display_name_lst: list = None) -> str:
         """
         检查一个显示名是否符合要求，不符合要求则直接返回一个新的显示名：
             1、如果显示名已经存在 -》 增加随机数后再次检查
             2、如果显示名不存在，则返回 暂无描述_随机码
         :param um_key:
         :param display_name:
+        :param key_name:
         :param display_name_lst:
         :return:
         """
         display_name = display_name or '暂无描述'
         display_name_lst: list = display_name_lst or self._get_display_name_list(um_key=um_key) or []
-        if display_name in display_name_lst:
+        display_name_str = ''.join(display_name_lst)
+
+        # 判断该key_name对应的【显示名】是否存在
+        is_exist: bool = f'{key_name}{TAG_START}{display_name}{TAG_END}' in display_name_lst
+        # 该【显示名】存在个数
+        is_exist_count: int = display_name_str.count(f'{TAG_START}{display_name}{TAG_END}')
+
+        # 是否需要拦截：当该key_name对应的【显示名】不存在 & 原先列表已存在这个【显示名】
+        need_intercept: bool = not is_exist and is_exist_count > 0
+        if need_intercept:
             new_display_name: str = f'{display_name}_{random.randint(0, 1000)}'
             self._print_tip(f'该事件显示名称已存在，尝试增加随机数后重新添加：{display_name} => {new_display_name}')
-            return self._check_display_name(um_key=um_key, display_name=new_display_name,
-                                            display_name_lst=display_name_lst)
+            return self._check_display_name(
+                um_key=um_key,
+                display_name=new_display_name,
+                key_name=key_name,
+                display_name_lst=display_name_lst
+            )
         else:
             return display_name
 
@@ -425,7 +444,7 @@ class UmTask(object):
         json_dict = self._get_dict_event_normal(um_key)
         json_dict_pause = self._get_dict_event_pause(um_key)
         lst = list(self._get_event_list(json_dict=json_dict)) + list(self._get_event_list(json_dict=json_dict_pause))
-        return ['%s' % item.get('displayName') for item in lst]
+        return ['%s' % f"{item.get('name')}{TAG_START}{item.get('displayName')}{TAG_END}" for item in lst]
 
     def _update_event_display_name(self, um_key: str, um_key_master: str):
         """

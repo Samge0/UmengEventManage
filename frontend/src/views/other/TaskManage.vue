@@ -63,7 +63,8 @@
         </el-upload>
     </el-dialog>
 
-
+<!--  返回顶部-->
+    <el-backtop :bottom="50"/>
   </el-container>
 
 </template>
