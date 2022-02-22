@@ -8,7 +8,7 @@ from django.http import HttpResponse
 
 from api.utils.u_json import DateEncoder
 
-CONTENT_TYPE_JSON = "application/json,charset=utf-8"
+CONTENT_TYPE_JSON = "application/json;charset=UTF-8"
 
 # 用户id的字段名
 UID = "HTTP_UMEM_UID"

@@ -38,6 +38,7 @@ def save_config(request):
         v = post_body.get(key.name)
         if v:
             value.__setattr__(key.name, v)
+    value.uc_content_type = value.uc_content_type or u_http.CONTENT_TYPE_JSON
     value.uc_update_time = timezone.now()
     value.save(force_update=force_update)
 
@@ -59,7 +60,7 @@ def get_default_headers(u_id: str):
     if len(values) > 0:
         config: dict = values[0]
         return {
-            'content-type': config.get('uc_content_type'),
+            'content-type': config.get('uc_content_type') or u_http.CONTENT_TYPE_JSON,
             'user-agent': config.get('uc_user_agent'),
             'x-xsrf-token': config.get('uc_token'),
             'x-xsrf-token-haitang': config.get('uc_token_haitang'),
