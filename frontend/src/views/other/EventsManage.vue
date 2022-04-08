@@ -240,7 +240,10 @@ export default defineComponent({
 
       showDrawer: false,
 
-      umKeys: [],
+      umKeys: [{
+                "um_name": "",
+                "um_key": ""
+              }],
 
       fileList: [],
 
@@ -294,6 +297,19 @@ export default defineComponent({
             state.loading = false
             if (res.data.data.length > 0) {
               state.umKeys = res.data.data
+
+              let allKey: string = '';
+              for (let item of state.umKeys) {
+                if (allKey.length > 0) {
+                  allKey = `${allKey}|${item.um_key}`
+                } else {
+                  allKey = item.um_key
+                }
+              }
+              state.umKeys.push({
+                "um_name": "汇总查询以上应用",
+                "um_key": allKey
+              })
               state.query.um_key = res.data.data[0].um_key
               getUmEvents()
             }

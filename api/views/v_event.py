@@ -6,7 +6,7 @@ import json
 import os
 import time
 
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
@@ -86,27 +86,59 @@ def um_event(request):
     pg_start = (pg_index-1)*pg_size
     pg_end = pg_size*pg_index
 
+    um_key_lst = um_key.split("|")
+
     # 判断友盟key
-    check_result_response = check_um_key(um_key=um_key)
+    check_result_response = check_um_key(um_key=um_key_lst[0])
     if check_result_response:
         return check_result_response
 
     # 判断友盟登录状态
     if refresh:
-        check_result_response = check_um_status(u_id=u_id, um_key=um_key)
+        check_result_response = check_um_status(u_id=u_id, um_key=um_key_lst[0])
         if check_result_response:
             return check_result_response
 
     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
-    need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
-
+    # results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
+    # need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
+    need_refresh = refresh or had_cache_all(u_id=u_id, um_key=um_key, curr_date=curr_date) is False
     if need_refresh:
-        um_tasks.load_analysis_event_file(u_id=u_id, um_key=um_key, refresh=refresh)
+        print('数据库未完全缓存，请求api拉取新数据')
+        for temp_key in um_key_lst:
+            um_tasks.load_analysis_event_file(u_id=u_id, um_key=temp_key, refresh=refresh)
         # 重新查询数据库
-        results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
+        #  results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
     else:
         print('数据库已有数据，直接读取数据库的数据')
+    results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
+
+    # 整合去重，数量累计，重新排序
+    if len(um_key_lst) > 1:
+        print('整合去重，数量累计，重新排序')
+        temp_lst = []
+        for result_item in results:
+            if f"'{result_item.get('um_displayName')}'" in str(temp_lst):
+                for temp_item in temp_lst:
+                    if temp_item.get("um_displayName") == result_item.get("um_displayName"):
+                        temp_item["um_md5"] = f'{temp_item.get("um_md5")}|{result_item.get("um_md5")}'
+                        temp_item["um_key"] = f'{temp_item.get("um_key")}|{result_item.get("um_key")}'
+                        temp_item["um_eventId"] = f'{temp_item.get("um_eventId")}|{result_item.get("um_eventId")}'
+                        temp_item["um_countToday"] += result_item.get("um_countToday")
+                        temp_item["um_countYesterday"] += result_item.get("um_countYesterday")
+                        temp_item["um_deviceYesterday"] += result_item.get("um_deviceYesterday")
+                        break
+            else:
+                temp_lst.append(result_item)
+        # 组装完毕后重新排序
+        if filter_dict:
+            order_by: str = filter_dict.get('order_by')
+            is_desc: bool = 'desc' == filter_dict.get('order')
+            try:
+                temp_lst.sort(key=lambda item: int(item.get(order_by)), reverse=is_desc)
+            except:
+                temp_lst.sort(key=lambda item: len(str(item.get(order_by))), reverse=is_desc)
+        results = temp_lst
 
     r = u_http.get_r_dict(
         code=200,
@@ -117,6 +149,25 @@ def um_event(request):
         }
     )
     return u_http.get_json_response(r)
+
+
+def had_cache_all(u_id: str, um_key: str, curr_date: str):
+    """
+    判断传进来的um_key是否都已经缓存了
+        group by um_key where count>0
+    :param u_id:
+    :param um_key:
+    :param curr_date:
+    :return:
+    """
+    um_key_lst: list = um_key.split("|")
+    _filter: Q = Q(u_id=u_id) & Q(um_date=curr_date)
+    if "|" in um_key:
+        _filter = _filter & Q(um_key__in=um_key.split("|"))
+    else:
+        _filter = _filter & Q(um_key=um_key)
+    obj = UmEventModel.objects.values("um_key").annotate(count=Count("um_key")).filter(_filter & Q(count__gt=0)).order_by('count')
+    return len(obj or []) == len(um_key_lst)
 
 
 def get_events_from_db(u_id: str, um_key: str, curr_date: str, filter_dict: dict):
@@ -149,7 +200,11 @@ def get_events_from_db(u_id: str, um_key: str, curr_date: str, filter_dict: dict
     :return:
     """
     order_by: str = None
-    _filter: Q = Q(u_id=u_id) & Q(um_key=um_key) & Q(um_date=curr_date)
+    _filter: Q = Q(u_id=u_id) & Q(um_date=curr_date)
+    if "|" in um_key:
+        _filter = _filter & Q(um_key__in=um_key.split("|"))
+    else:
+        _filter = _filter & Q(um_key=um_key)
     if filter_dict and len(filter_dict or {}) > 0:
         print(f"存在筛选条件，进行筛选查询：{filter_dict}")
 
