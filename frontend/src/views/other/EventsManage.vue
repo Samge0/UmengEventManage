@@ -28,12 +28,12 @@
               </el-option>
             </el-select>
 
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-info" @click="openUmLink()">官网链接</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-info" @click="openUmLink()" :disabled="isCheckAll">官网链接</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="query.refresh = 1; query.pg_index = 1;getUmEvents()">刷新</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOpWithDialog(0, '批量暂停')">批量暂停</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOpWithDialog(1, '批量恢复')">批量恢复</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="uploadEventFile()">上传事件</el-button>
-            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportCurrEvents">导出事件</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-delete" @click="parseEventOpWithDialog(0, '批量暂停')" :disabled="isCheckAll">批量暂停</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-refresh" @click="parseEventOpWithDialog(1, '批量恢复')" :disabled="isCheckAll">批量恢复</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-upload2" @click="uploadEventFile()" :disabled="isCheckAll">上传事件</el-button>
+            <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-download" @click="exportCurrEvents" :disabled="isCheckAll">导出事件</el-button>
             <el-button size="mini" class="el-button-add" type="primary" icon="el-icon-sort" @click="showDrawer = true;">事件筛选</el-button>
           </el-col>
 
@@ -224,6 +224,9 @@ export default defineComponent({
   setup: function () {
     const state = reactive({
 
+      // 是否汇总查询
+      isCheckAll: false,
+
       // 上传头加认证信息
       upload_headers: {
         'Authorization': localStorage.getItem("token"),
@@ -307,7 +310,7 @@ export default defineComponent({
                 }
               }
               state.umKeys.push({
-                "um_name": "汇总查询以上应用",
+                "um_name": "【汇总查询】☝⇧⇪⇈⇑⇡",
                 "um_key": allKey
               })
               state.query.um_key = res.data.data[0].um_key
@@ -493,6 +496,7 @@ export default defineComponent({
     const onUmKeyChange = (um_key: any) => {
       console.log(`onUmKeyChange ${um_key}`)
       state.query.pg_index = 1
+      state.isCheckAll = !uStr.isEmpty(state.query.um_key) && state.query.um_key.indexOf("|") != -1
       getUmEvents()
     }
 

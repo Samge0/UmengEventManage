@@ -39,6 +39,18 @@ def get_event_md5(u_id: str, um_eventId: str, curr_date: str):
     return get_md5(md5_value)
 
 
+def get_event_check_all_md5(u_id: str, um_key: str, curr_date: str):
+    """
+    获取友盟自定义事件的【汇总查询】的md5值
+    :param u_id:
+    :param um_key:
+    :param curr_date:
+    :return:
+    """
+    md5_value: str = f"{u_id}_{um_key}_{curr_date}"
+    return get_md5(md5_value)
+
+
 def get_md5(md5_value: str):
     """
     将字符串转md5

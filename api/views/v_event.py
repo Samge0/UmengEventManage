@@ -75,7 +75,9 @@ def um_event(request):
     :param request:
     :return:
     """
+
     u_id: str = u_http.get_uid(request)
+    task: UmTask = UmTask(u_id=u_id, um_socks=None)
 
     post_body = json.loads(request.body)
     um_key: str = post_body.get('um_key')
@@ -99,46 +101,55 @@ def um_event(request):
         if check_result_response:
             return check_result_response
 
+    is_check_all: bool = len(um_key_lst) > 1
     curr_date: str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    # results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
-    # need_refresh = refresh or (len(results) == 0 and len(filter_dict or {}) == 0)
-    need_refresh = refresh or had_cache_all(u_id=u_id, um_key=um_key, curr_date=curr_date) is False
+    um_key_real_query: str = u_md5.get_event_check_all_md5(u_id, um_key, curr_date) if is_check_all else um_key
+    results: list = get_events_from_db(u_id=u_id, um_key=um_key_real_query, curr_date=curr_date, filter_dict=filter_dict)
+    need_refresh = refresh or len(results) == 0
+    # need_refresh = refresh or had_cache_all(u_id=u_id, um_key=um_key, curr_date=curr_date) is False
     if need_refresh:
         print('数据库未完全缓存，请求api拉取新数据')
         for temp_key in um_key_lst:
             um_tasks.load_analysis_event_file(u_id=u_id, um_key=temp_key, refresh=refresh)
+
+        # 整合去重，数量累计，重新排序
+        if is_check_all:
+            results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=None)
+            print('整合去重，数量累计，重新排序')
+            temp_lst = []
+            try:
+                for result_item in results:
+                    if f"'{result_item.get('um_displayName')}'" in str(temp_lst):
+                        for temp_item in temp_lst:
+                            if temp_item.get("um_displayName") == result_item.get("um_displayName"):
+                                temp_item["um_md5"] = ''
+                                temp_item["um_key"] = um_key_real_query
+                                temp_item["um_eventId"] = f'{temp_item.get("um_eventId")}|{result_item.get("um_eventId")}'
+                                temp_item["um_countToday"] += result_item.get("um_countToday")
+                                temp_item["um_countYesterday"] += result_item.get("um_countYesterday")
+                                temp_item["um_deviceYesterday"] += result_item.get("um_deviceYesterday")
+                                break
+                    else:
+                        result_item["um_md5"] = ''
+                        result_item["um_key"] = um_key_real_query
+                        temp_lst.append(result_item)
+            except Exception as e:
+                print(e)
+            # 组装完毕后重新排序
+            if filter_dict:
+                order_by: str = filter_dict.get('order_by')
+                is_desc: bool = 'desc' == filter_dict.get('order')
+                try:
+                    temp_lst.sort(key=lambda item: int(item.get(order_by)), reverse=is_desc)
+                except:
+                    temp_lst.sort(key=lambda item: len(str(item.get(order_by))), reverse=is_desc)
+            # 将组合查询结果缓存到数据库方便下次查询
+            task.insert_event(results=list(temp_lst))
+
         # 重新查询数据库
-        #  results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
+        results: list = get_events_from_db(u_id=u_id, um_key=um_key_real_query, curr_date=curr_date, filter_dict=filter_dict)
     else:
         print('数据库已有数据，直接读取数据库的数据')
-    results: list = get_events_from_db(u_id=u_id, um_key=um_key, curr_date=curr_date, filter_dict=filter_dict)
-
-    # 整合去重，数量累计，重新排序
-    if len(um_key_lst) > 1:
-        print('整合去重，数量累计，重新排序')
-        temp_lst = []
-        for result_item in results:
-            if f"'{result_item.get('um_displayName')}'" in str(temp_lst):
-                for temp_item in temp_lst:
-                    if temp_item.get("um_displayName") == result_item.get("um_displayName"):
-                        temp_item["um_md5"] = f'{temp_item.get("um_md5")}|{result_item.get("um_md5")}'
-                        temp_item["um_key"] = f'{temp_item.get("um_key")}|{result_item.get("um_key")}'
-                        temp_item["um_eventId"] = f'{temp_item.get("um_eventId")}|{result_item.get("um_eventId")}'
-                        temp_item["um_countToday"] += result_item.get("um_countToday")
-                        temp_item["um_countYesterday"] += result_item.get("um_countYesterday")
-                        temp_item["um_deviceYesterday"] += result_item.get("um_deviceYesterday")
-                        break
-            else:
-                temp_lst.append(result_item)
-        # 组装完毕后重新排序
-        if filter_dict:
-            order_by: str = filter_dict.get('order_by')
-            is_desc: bool = 'desc' == filter_dict.get('order')
-            try:
-                temp_lst.sort(key=lambda item: int(item.get(order_by)), reverse=is_desc)
-            except:
-                temp_lst.sort(key=lambda item: len(str(item.get(order_by))), reverse=is_desc)
-        results = temp_lst
 
     r = u_http.get_r_dict(
         code=200,

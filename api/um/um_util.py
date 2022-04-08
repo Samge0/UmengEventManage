@@ -389,7 +389,7 @@ class UmTask(object):
         """
         self._cache_all_events(um_keys=[um_key])
         results: list = list(self._append_all_event_analysis(um_key=um_key))
-        self._insert_event(results=results)
+        self.insert_event(results=results)
     # ------------------------------------------ 下载 & 检测状态 & 更新数据库 end ----------------------------------------
 
     # ------------------------------------------ 显示名处理 start ----------------------------------------
@@ -527,7 +527,7 @@ class UmTask(object):
             self._print_tip(f'【{tag}】自定义事件 失败:{self._get_fail_msg(um_key=um_key, r=r)}')
     # ------------------------------------------ 自定义事件 恢复/暂停 end ----------------------------------------
 
-    def _insert_event(self, results: list):
+    def insert_event(self, results: list):
         """
         将友盟自定义事件插入数据库，改为 bulk_create 方式批量插入
         :param results:
@@ -550,15 +550,15 @@ class UmTask(object):
             um_md5: str = u_md5.get_event_md5(self.u_id, item.get('um_eventId'), curr_date)
             key = UmEventModel(um_md5=um_md5)
             key.u_id = self.u_id
-            key.um_key = item.get('um_key')
-            key.um_eventId = item.get('um_eventId')
-            key.um_name = item.get('um_name')
-            key.um_displayName = item.get('um_displayName')
-            key.um_status = item.get('um_status')
-            key.um_eventType = item.get('um_eventType_int')
-            key.um_countToday = item.get('um_countToday')
-            key.um_countYesterday = item.get('um_countYesterday')
-            key.um_deviceYesterday = item.get('um_deviceYesterday')
+            key.um_key = item.get('um_key')[:128]
+            key.um_eventId = item.get('um_eventId')[:128]
+            key.um_name = item.get('um_name')[:128]
+            key.um_displayName = item.get('um_displayName')[:128]
+            key.um_status = item.get('um_status') or 0
+            key.um_eventType = item.get('um_eventType') or 0
+            key.um_countToday = item.get('um_countToday') or 0
+            key.um_countYesterday = item.get('um_countYesterday') or 0
+            key.um_deviceYesterday = item.get('um_deviceYesterday') or 0
             key.um_date = curr_date
             product_list_to_insert.append(key)
         UmEventModel.objects.bulk_create(product_list_to_insert)
@@ -759,8 +759,7 @@ class UmTask(object):
                 'um_name': item.get('name'),
                 'um_displayName': item.get('displayName'),
                 'um_status': item.get('status'),
-                'um_eventType': item.get('eventType'),
-                'um_eventType_int': self._get_event_type_int(item.get('eventType')),
+                'um_eventType': self._get_event_type_int(item.get('eventType')),
                 'um_countToday': item.get('countToday') or 0,
                 'um_countYesterday': item.get('countYesterday') or 0,
                 'um_deviceYesterday': item.get('deviceYesterday') or 0
