@@ -76,6 +76,7 @@ import {api} from "@/axios/api";
 import {toast} from "@/utils/toast";
 import router from "@/router";
 import {uStr} from "@/utils/uStr";
+import {ElMessageBox} from "element-plus";
 
 let socketClient: Socket|any = null;
 
@@ -166,7 +167,22 @@ export default defineComponent({
      */
     const startSynTask = () => {
       if(checkUmKey()){
-        startTask('syn')
+         ElMessageBox.confirm(
+          `请确保【友盟KEY】的主从关系已配置无误，同步操作执行后无法撤销！`,
+          '重要提醒',
+          {
+            distinguishCancelAndClose: true,
+            confirmButtonText: '我已确认',
+            cancelButtonText: '取消',
+          }
+        )
+        .then(() => {
+          startTask('syn')
+        })
+        .catch((action: string) => {
+          // cancel  or  close
+          console.log(action)
+        })
       }
     }
 
