@@ -105,3 +105,8 @@ Supervisor密码：admin
     ```
       npm run serve
     ```
+    
+
+### 技术交流
+- [Join Discord >>](https://discord.com/invite/eRuSqve8CE)
+- WeChat：`SamgeApp`
